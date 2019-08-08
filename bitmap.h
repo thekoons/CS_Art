@@ -157,14 +157,18 @@ void automata(Bitmap& b, int* rules, int steps)
 {
 	int neighbors;
 
+	//Factor in area of effect to ruleset
 	for (int i = 0; i < 4; i++)
 		rules[i] * (pow(3 + (rules[4] - 1) * 2, 2) - 1) / 8;
 
+	//Loop through bitmap applying automata filter
 	for (int i = 0; i < b.getSize(0); i++){
 		for (int j = 0; j < b.getSize(1); j++) {
 
+			//Get neighbors of current pixel
 			neighbors = countNeighbors(b, i, j, rules[4]);
 			
+			//Calculates whether, based on active neighbors, an inactive pixel turns on
 			if (b.getPixel(i, j).isOn() == false){
 				if ((neighbors >= rules[2]) && (neighbors <= rules[3])) {
 					b.getPixel(i, j).flip(true);
@@ -173,6 +177,7 @@ void automata(Bitmap& b, int* rules, int steps)
 				}
 			}
 			
+			//Calculates whether, based on inative neighbors, an active pixel turns off
 			if (b.getPixel(i, j).isOn() == true) {
 				if ((neighbors >= rules[0]) && (neighbors <= rules[1])) {
 					b.getPixel(i, j).flip(true);
@@ -182,6 +187,7 @@ void automata(Bitmap& b, int* rules, int steps)
 			}
 		}
 	}
+	
 	
 	for (int i = 0; i < b.getSize[0]; i++){
 		for (int j = 0; j < b.getSize[1]; j++) {
@@ -348,7 +354,7 @@ void blur(Bitmap& b)
 int getMask(char* mask) 
 {
 	for (int i = 0; i < 4; i++) {
-		if (mask[i] != '\0') {  
+		if (mask[i] != '\0'){  
 			return 4 - i; //takes into account endianness
 		}
 	}
