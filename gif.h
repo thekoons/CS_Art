@@ -59,6 +59,8 @@
 #define GIF_FREE free
 #endif
 
+#define GIF_FLIP_VERT 1
+
 const int kGifTransIndex = 0;
 
 struct GifPalette

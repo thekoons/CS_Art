@@ -1,3 +1,2 @@
-
 all:
-	g++ main.cpp bitmap.cpp -o bitmap
+	g++ main.cpp -o bitmap

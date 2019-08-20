@@ -1,7 +1,8 @@
 #include <iostream>
 #include <fstream>
-#include <string>
+#include <string.h>
 #include "bitmap.h"
+#include "gif.h"
 
 int main(int argc, char** argv)
 {
@@ -15,7 +16,8 @@ int main(int argc, char** argv)
 
     try
     {
-        int steps(atoi(argv[1]);
+        int rules[5] = {0, 0, 1, 1, 1};
+        int steps(atoi(argv[1]));
         string infile(argv[2]);
         string outfile(argv[3]);
 
@@ -23,15 +25,58 @@ int main(int argc, char** argv)
         Bitmap image;
         ofstream out;
 
+        cout << "Program Starting..." << endl;
+
         in.open(infile, ios::binary);
         in >> image;
         in.close();
 
-        automata(image, steps);
+        cout << "Seed Image Loaded..." << endl;
 
-        out.open(outfile, ios::binary);
-        out << image;
-        out.close();
+        int width = image.getSize(1);
+        int height = image.getSize(0);
+        int delay = 10;
+        vector<uint8_t> frame;
+        GifWriter gifw;
+
+        cout << "Gif Writer Created..." << endl;
+
+        GifBegin(&gifw, outfile.c_str(), width, height, delay);
+
+        cout << "Gif Writer Initialized..." << endl;
+
+        if (steps > 0)
+        {
+            for (int i = 0; i < steps; i++) {
+
+                automata(image, rules, 1);
+
+                /*cout << "Image " << i << " Processed..." << endl;
+
+                char str[16];
+                memset(str, '\0', 16);
+                sprintf(str, "out%d.bmp", i);
+
+                out.open(str, ios::binary);
+                out << image;
+                out.close();
+
+                cout << "Image " << i << " Saved..." << endl;
+                */
+
+                getFrame(frame, image);
+
+                //cout << "Frame " << i << " Created..." << endl;
+
+                GifWriteFrame(&gifw, frame.data(), width, height, delay);
+
+                cout << "Frame " << i << " Written..." << endl;
+            }
+        }
+
+       GifEnd(&gifw);
+
+       cout << "...Gif Written" << endl; 
     }
     catch(BADHEADER)
     {
