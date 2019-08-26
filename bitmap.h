@@ -40,6 +40,7 @@ class Pixel
 				_nextrgb[i] = 0;
 			}
 
+			//Activates pixels with r and b values equal to 255
 			if (_rgb[0] == 255 && _rgb[1] == 255)
 				_on = false;
 			else
@@ -96,12 +97,21 @@ class Pixel
 			_on = _nexton;
 			_nexton = false;
 
+#ifdef NIGHT_MODE
 			for (int i = 0; i < 4; i++) {
 				if (_on)
 					_rgb[i] = _heldrgb[i];
 				else
 					_rgb[i] = 255 - _heldrgb[i];
 			}
+#else
+			for (int i = 0; i < 4; i++) {
+				if (_on)
+					_rgb[i] = _heldrgb[i];
+				else
+					_rgb[i] = 255 - _heldrgb[i];
+			}
+#endif
 		}
 };
 
@@ -223,52 +233,48 @@ int countNeighbors(Bitmap& b, int i, int j, int AE, int* newrgb)
 }
 
 //Automata transformation
-void automata(Bitmap& b, int* rules, int steps)
+void automata(Bitmap& b, int* rules)
 {
 	//Factor in area of effect to ruleset
 	for (int i = 0; i < 4; i++)
 		rules[i] * (pow(3 + (rules[4] - 1) * 2, 2) - 1) / 8;
 
-	//Loops once per step as specified 
-	for (int n = 0; n < steps; n++){
+	//Loop through bitmap applying automata filter
+	for (int i = 0; i < b.getSize(0); i++){
+
+		for (int j = 0; j < b.getSize(1); j++) {
+
+			//Get neighbors of current pixel
 	
-		//Loop through bitmap applying automata filter
-		for (int i = 0; i < b.getSize(0); i++){
+			int newrgb[4] = {0, 0, 0, 0};
+			int neighbors = countNeighbors(b, i, j, rules[4], newrgb);
 
-			for (int j = 0; j < b.getSize(1); j++) {
-
-				//Get neighbors of current pixel
-		
-				int newrgb[4] = {0, 0, 0, 0};
-				int neighbors = countNeighbors(b, i, j, rules[4], newrgb);
-
-				b.getPixel(i,j).setHeldRGB(newrgb);
-				
-				//Calculates whether, based on active neighbors, an inactive pixel turns on
-				if (b.getPixel(i, j).isOn() == false){
-					if ((neighbors >= rules[2]) && (neighbors <= rules[3])) {
-						b.getPixel(i, j).flip(true);
-					} else {
-						b.getPixel(i, j).flip(false);
-					}
+			b.getPixel(i,j).setHeldRGB(newrgb);
+			
+			//Calculates whether, based on active neighbors, an inactive pixel turns on
+			if (b.getPixel(i, j).isOn() == false){
+				if ((neighbors >= rules[2]) && (neighbors <= rules[3])) {
+					b.getPixel(i, j).flip(true);
+				} else {
+					b.getPixel(i, j).flip(false);
 				}
-				
-				//Calculates whether, based on inative neighbors, an active pixel turns off
-				if (b.getPixel(i, j).isOn() == true) {
-					if ((neighbors >= rules[0]) && (neighbors <= rules[1])) {
-						b.getPixel(i, j).flip(true);
-					} else {
-						b.getPixel(i, j).flip(false);
-					}
+			}
+			
+			//Calculates whether, based on inative neighbors, an active pixel turns off
+			if (b.getPixel(i, j).isOn() == true) {
+				if ((neighbors >= rules[0]) && (neighbors <= rules[1])) {
+					b.getPixel(i, j).flip(true);
+				} else {
+					b.getPixel(i, j).flip(false);
 				}
 			}
 		}
+	}
 
-		//Rectifies changes made during cellular automata filter
-		for (int i = 0; i < b.getSize(0); i++){
-			for (int j = 0; j < b.getSize(1); j++) {
-				b.getPixel(i, j).rectify();
-			}
+	//Rectifies changes made during cellular automata filter
+	for (int i = 0; i < b.getSize(0); i++){
+		for (int j = 0; j < b.getSize(1); j++) {
+			b.getPixel(i, j).rectify();
 		}
 	}
 }

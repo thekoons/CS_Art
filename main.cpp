@@ -6,26 +6,65 @@
 
 int main(int argc, char** argv)
 {
-    if(argc != 4)
+    if(argc != 5)
     {
         cout << "usage:\n"
-             << "bitmap steps inputfile.bmp outputfile.bmp" << endl;
+             << "bitmap rulenumber steps inputfile.bmp outputfile.gif" << endl;
 
         return 0;
     }
 
     try
     {
-        int rules[5] = {0, 0, 1, 1, 1};
-        int steps(atoi(argv[1]));
-        string infile(argv[2]);
-        string outfile(argv[3]);
+        srand(time(NULL));
+
+        int rulenum(atoi(argv[1]));
+        int steps(atoi(argv[2]));
+        string infile(argv[3]);
+        string outfile(argv[4]);
 
         ifstream in;
         Bitmap image;
         ofstream out;
 
         cout << "Program Starting..." << endl;
+
+#ifdef NIGHT_MODE
+        cout << "   Night Mode Active" << endl;
+#else
+        cout << "   Day Mode Active" << endl;
+#endif 
+
+#ifdef RANDOM_RULES
+        cout << "   Using Random Ruleset" << endl;
+#else
+        cout << "   Using Defined Ruleset" << endl;
+#endif
+
+        int **rules = new int*[rulenum];
+
+        //Determines Ruleset given compiler flag
+        for (int i = 0; i < rulenum; i++) {
+            rules[i] = new int[6];
+
+#ifdef RANDOM_RULES
+            rules[i][0] = rand() % 3 + 1;
+            rules[i][1] = rand() % (5 - rules[i][0]) + rules[i][0];
+            rules[i][2] = rand() % 3 + 1;
+            rules[i][3] = rand() % (5 - rules[i][2]) + rules[i][2];
+            rules[i][4] = rand() % 2 + 1;
+#else
+            rules[i][0] = 0;
+            rules[i][1] = 0;
+            rules[i][2] = 1;
+            rules[i][3] = 1;
+            rules[i][4] = 1;
+#endif
+
+            rules[i][5] = steps / rulenum;
+        }
+
+        cout << "Seed Image Loading..." << endl;
 
         in.open(infile, ios::binary);
         in >> image;
@@ -45,38 +84,25 @@ int main(int argc, char** argv)
 
         cout << "Gif Writer Initialized..." << endl;
 
-        if (steps > 0)
+        for (int n = 0; n < rulenum; n++)
         {
-            for (int i = 0; i < steps; i++) {
+            cout << n << " - Writing " << rules[n][5] << " frames with (" << rules[n][0] << ", " 
+                 << rules [n][1] << ", " << rules[n][2] << ", " << rules[n][3] << ", " << rules[n][4] << ")" << endl;
 
-                automata(image, rules, 1);
-
-                /*cout << "Image " << i << " Processed..." << endl;
-
-                char str[16];
-                memset(str, '\0', 16);
-                sprintf(str, "out%d.bmp", i);
-
-                out.open(str, ios::binary);
-                out << image;
-                out.close();
-
-                cout << "Image " << i << " Saved..." << endl;
-                */
-
+            for (int i = 0; i < rules[n][5]; i++) 
+            {
+                automata(image, rules[n]);
                 getFrame(frame, image);
-
-                //cout << "Frame " << i << " Created..." << endl;
-
                 GifWriteFrame(&gifw, frame.data(), width, height, delay);
 
-                cout << "Frame " << i << " Written..." << endl;
+                cout << "   Frame " << i << " Written" << endl;
             }
         }
 
        GifEnd(&gifw);
 
        cout << "...Gif Written" << endl; 
+
     }
     catch(BADHEADER)
     {
