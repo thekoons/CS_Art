@@ -7,34 +7,34 @@ using namespace std;
 
 class Event {
 	public:
-		Event(int start, int duration);
+		Event(int start, int duration) : _start(start), _duration(duration) {}
 
 		virtual void Activate() = 0;
 
 	private:
-		int start;
-		int duration;
+		int _start;
+		int _duration;
 }
 
 class Animation : public Event {
 	public:
-		Animation();
+		Animation(
 		~Animation();
 
 		//Called once per frame, calls Write_Pixel appropriately
 		void Activate();   
 
 	private:
-		int* rgb_start;     //Initial color values of animation
-		int** rgb_script;   //Frame by frame delta color values
+		int* _rgb_start;     //Initial color values of animation
+		int** _rgb_script;   //Frame by frame delta color values
 								//To be added to rgb values each frame
 
-		int* pix_start;     //Initial coordinates of central pixel
-		int** pix_script;   //Frame by frame delta coordinate values
+		int* _pix_start;     //Initial coordinates of central pixel
+		int** _pix_script;   //Frame by frame delta coordinate values
 								//To be added to coordinate each frame
 
-		int shape;          //One of a predetermined number of shapes
-		int* shape_params;  //Parameters unique to shape 
+		int _shape;          //One of a predetermined number of shapes
+		int* _shape_params;  //Parameters unique to shape 
 
 		//Writes a color value to a pixel
 		void Write_Pixel(Bitmap& b, int* coords, int* rgb);
@@ -52,12 +52,13 @@ class Filter : public Event {
 	private:
 		int _type;
 
-		void Apply_Filter(Bitmap& b);
+		void Apply_Filter(Bitmap& b, int degree);
 
-		void pixelate(Bitmap& b);
-		void grayscale(Bitmap& b);
-		void blur(Bitmap& b);
-		void cellshade(Bitmap& b);
+		void pixelate(Bitmap& b, int degree);
+		void grayscale(Bitmap& b, int degree);
+		void blur(Bitmap& b, int degree);
+		void cellshade(Bitmap& b, int degree);
+		void zoom(Bitmap& b, int degree);
 }
 
 /*** following filters are out of date and will not work ***/

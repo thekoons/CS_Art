@@ -9,7 +9,7 @@ int main(int argc, char** argv)
     if(argc != 5)
     {
         cout << "usage:\n"
-             << "bitmap rulenumber steps inputfile.bmp outputfile.gif" << endl;
+             << "cellular rulenumber steps inputfile.bmp outputfile.gif" << endl;
 
         return 0;
     }
@@ -53,15 +53,26 @@ int main(int argc, char** argv)
             rules[i][2] = rand() % 3 + 1;
             rules[i][3] = rand() % (5 - rules[i][2]) + rules[i][2];
             rules[i][4] = rand() % 2 + 1;
+            rules[i][5] = steps / rulenum;
+
 #else
-            rules[i][0] = 0;
-            rules[i][1] = 0;
-            rules[i][2] = 1;
-            rules[i][3] = 1;
-            rules[i][4] = 1;
+            if (i < 1) {
+                rules[i][0] = 0;
+                rules[i][1] = 1;
+                rules[i][2] = 1;
+                rules[i][3] = 1;
+                rules[i][4] = 1;
+                rules[i][5] = 400;
+            } else {
+                rules[i][0] = 2;
+                rules[i][1] = 3;
+                rules[i][2] = 3;
+                rules[i][3] = 3;
+                rules[i][4] = 1;
+                rules[i][5] = 50;
+            }
 #endif
 
-            rules[i][5] = steps / rulenum;
         }
 
         cout << "Seed Image Loading..." << endl;
