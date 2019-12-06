@@ -6,6 +6,8 @@
 
 int main(int argc, char** argv)
 {
+    
+#ifdef RANDOM_RULES
     if(argc != 5)
     {
         cout << "usage:\n"
@@ -13,15 +15,19 @@ int main(int argc, char** argv)
 
         return 0;
     }
+#else
+    if(argc != 4)
+    {
+        cout << "usage:\n"
+             << "cellular steps inputfile.bmp outputfile.gif" << endl;
+
+        return 0;
+    }
+#endif
 
     try
     {
         srand(time(NULL));
-
-        int rulenum(atoi(argv[1]));
-        int steps(atoi(argv[2]));
-        string infile(argv[3]);
-        string outfile(argv[4]);
 
         ifstream in;
         Bitmap image;
@@ -37,8 +43,18 @@ int main(int argc, char** argv)
 
 #ifdef RANDOM_RULES
         cout << "   Using Random Ruleset" << endl;
+
+        int rulenum(atoi(argv[1]));
+        int steps(atoi(argv[2]));
+        string infile(argv[3]);
+        string outfile(argv[4]);
 #else
         cout << "   Using Defined Ruleset" << endl;
+
+        int rulenum = 1;
+        int steps(atoi(argv[1]));
+        string infile(argv[2]);
+        string outfile(argv[3]);
 #endif
 
         int **rules = new int*[rulenum];
@@ -54,23 +70,13 @@ int main(int argc, char** argv)
             rules[i][3] = rand() % (5 - rules[i][2]) + rules[i][2];
             rules[i][4] = rand() % 2 + 1;
             rules[i][5] = steps / rulenum;
-
 #else
-            if (i < 1) {
-                rules[i][0] = 0;
-                rules[i][1] = 1;
-                rules[i][2] = 1;
-                rules[i][3] = 1;
-                rules[i][4] = 1;
-                rules[i][5] = 400;
-            } else {
-                rules[i][0] = 2;
-                rules[i][1] = 3;
-                rules[i][2] = 3;
-                rules[i][3] = 3;
-                rules[i][4] = 1;
-                rules[i][5] = 50;
-            }
+            rules[i][0] = 1;
+            rules[i][1] = 3;
+            rules[i][2] = 3;
+            rules[i][3] = 4;
+            rules[i][4] = 4;
+            rules[i][5] = steps / rulenum;
 #endif
 
         }
