@@ -5,6 +5,9 @@
 
 using namespace std;
 
+#ifndef _BITMAP_HPP
+#define _BITMAP_HPP
+
 class BADHEADER : public exception {
 	public:
 		string msg;
@@ -13,17 +16,17 @@ class BADHEADER : public exception {
 class Pixel
 {
 	private:
-		bool _on;				//Determines whether pixel is 'On' (Cellular Automata)
-		bool _nexton;			//Determines whether pixel is 'On' after calling rectify
+		int _state;				//State of pixel (for Cellular Automata)
+		int _nextstate;			//State of pixel for after rectify is called
 
 		int _rgb[4];			//current rgb value as number between 0-255
 		int _nextrgb[4];		//next rgb value (to be set upon next step)
-		int _heldrgb[4];		//held rgb value (to return to upon being flipped "on")
+		int _heldrgb[4];		//held rgb value (for Cellular Automata)
 
 	public:
 		Pixel() 
 		{
-			_on = false;
+			_state = 0;
 
 			for (int i = 0; i < 4; i++) {
 				_rgb[i] = 0;
@@ -42,15 +45,15 @@ class Pixel
 
 			//Activates pixels with r and b values equal to 255
 			if (_rgb[0] == 255 && _rgb[1] == 255)
-				_on = false;
+				_state = 0;
 			else
-				_on = true;
+				_state = 2;
 		}
 
 		Pixel(Pixel* p) 
 		{
-			_on = p->isOn();
-			_nexton = false;
+			_state = p->getState();
+			_nextstate = 0;
 
 			int* rgb = p->getRGB();
 			int* heldrgb = p->getHeldRGB();
@@ -62,11 +65,11 @@ class Pixel
 			}
 		}
 
-		bool isOn() 		{return _on;}
-		void flip(bool on) 	{_nexton = on;}
+		int  getState() 			{return _state;}
+		void transition(int state) 	{_nextstate = state;}
 		
-		int* getRGB() 		{return _rgb;}
-		int* getHeldRGB() 	{return _heldrgb;}
+		int* getRGB() 				{return _rgb;}
+		int* getHeldRGB() 			{return _heldrgb;}
 
 		void setRGB(int* rgb) 
 		{
@@ -94,24 +97,24 @@ class Pixel
 
 		void rectify() 
 		{
-			_on = _nexton;
-			_nexton = false;
+			_state = _nextstate;
+			_nextstate = 0;
 
-#ifdef NIGHT_MODE
 			for (int i = 0; i < 4; i++) {
-				if (_on)
+				if (_state == 2)
 					_rgb[i] = _heldrgb[i];
+				else if (_state == 1)
+					_rgb[i] = (int) (0.8 * ((float)_heldrgb[i]) + 0.2 * ((float)(255 - _heldrgb[i])));
 				else
 					_rgb[i] = 255 - _heldrgb[i];
 			}
-#else
+		}
+
+		void rectifyRGB()
+		{
 			for (int i = 0; i < 4; i++) {
-				if (_on)
-					_rgb[i] = _heldrgb[i];
-				else
-					_rgb[i] = 255 - _heldrgb[i];
+				_rgb[i] = _nextrgb[i];
 			}
-#endif
 		}
 };
 
@@ -133,6 +136,8 @@ class Bitmap
 	public:
 
 		Bitmap() {}
+
+		Bitmap(int type, int width, int height);
 
 		~Bitmap() {
 			for (int i = 0; i < size[0]; i++) 
@@ -161,12 +166,63 @@ class Bitmap
 		Pixel getConstPixel(int i, int j) const {return map[i][j];}
 };
 
+Bitmap::Bitmap(int type, int width, int height)
+{
+	size[0] = width;
+	size[1] = height;
+
+	/*
+
+	for (int i = 0; i < size[0]; i++) {
+	
+		vector<Pixel> line;			
+		
+		for (int j = 0; j < size[1]; j++) {
+			
+			if (b.depth == 32) {	//Reads 32 bit pixel
+				for (int k = 0; k < 4; k++) { 
+					in.read((char*) &pixleData[k], 1);
+					rgb[maskRef[k]] = pixleData[k];
+				}	
+			} else {				//Reads 24 bit pixel
+				for (int k = 0; k < 3; k++) {
+					in.read((char*) &pixleData[k], 1);
+					rgb[k] = pixleData[k];
+				}
+			}
+
+			Pixel* p = new Pixel(rgb);
+			line.push_back(*p);
+		}
+
+		b.map.push_back(line);	
+		*/
+}
+
 //Takes Bitmap object B, and outputs frame as vector of uint8_t
 //	Stores each pixel's RGBA values consecutively
 void getFrame(vector<uint8_t>& frame, Bitmap& b)
 {
 	frame.clear();
 
+#ifdef SMOL
+	for (int i = 0; i < b.getSize(0); i++) 
+	{
+		for (int l1 = 0; l1 < 4; l1++)
+		{
+			for (int j = 0; j < b.getSize(1); j++)
+			{
+				for (int l2 = 0; l2 < 4; l2++)
+				{
+					int* rgb = b.getPixel(i, j).getRGB();
+
+					for (int k = 0; k < 4; k++)
+						frame.push_back((uint8_t) rgb[k]);
+				}
+			}		
+		}
+	}
+#else
 	for (int i = 0; i < b.getSize(0); i++) 
 	{
 		for (int j = 0; j < b.getSize(1); j++)
@@ -177,100 +233,7 @@ void getFrame(vector<uint8_t>& frame, Bitmap& b)
 				frame.push_back((uint8_t) rgb[k]);
 		}		
 	}
-}
-
-//Counts neighbors of pixel at position i, j with area of effect AE
-int countNeighbors(Bitmap& b, int i, int j, int AE, int* newrgb)
-{
-	int i_upper_bound, i_lower_bound;
-	int j_upper_bound, j_lower_bound;
-	int row = b.getSize(0);
-	int col = b.getSize(1);
-	int neighbors = 0;
-	
-	//Ensures bounds respect edges of table given Area of Effect
-	if 	(i - AE < 0)		{i_lower_bound = 0;}
-	else 					{i_lower_bound = i - AE;}
-	if 	(j - AE < 0) 		{j_lower_bound = 0;}
-	else 					{j_lower_bound = j - AE;}
-	if 	(i + AE >= row) 	{i_upper_bound = row - 1;}
-	else 					{i_upper_bound = i + AE;}
-	if 	(j + AE >= col) 	{j_upper_bound = col - 1;}
-	else 					{j_upper_bound = j + AE;}
-	
-	//Counts Neighbors of current pixel
-	for (int k = i_lower_bound; k <= i_upper_bound; k++) {
-		for (int l = j_lower_bound; l <= j_upper_bound; l++) {
-			if ((b.getPixel(k, l).isOn() == true) && ((k != i) || (l != j))) {
-
-				int* rgb = b.getPixel(k, l).getHeldRGB();
-
-				for (int n = 0; n < 4; n++)
-					newrgb[n] += rgb[n];
-
-				neighbors++;
-
-			}
-		}
-	}
-
-	//Averages color of active neighbors (if any neighbors are alive)
-	for (int n = 0; n < 4; n++) {
-		if (neighbors > 0)
-			newrgb[n] = (int) ((float)newrgb[n]) / neighbors;
-		else
-			newrgb[n] = b.getPixel(i, j).getHeldRGB()[n];
-		
-	}
-
-	return neighbors;
-}
-
-//Automata transformation
-void automata(Bitmap& b, int* rules)
-{
-	//Factor in area of effect to ruleset
-	for (int i = 0; i < 4; i++)
-		rules[i] * (pow(3 + (rules[4] - 1) * 2, 2) - 1) / 8;
-
-	//Loop through bitmap applying automata filter
-	for (int i = 0; i < b.getSize(0); i++){
-
-		for (int j = 0; j < b.getSize(1); j++) {
-
-			//Get neighbors of current pixel
-	
-			int newrgb[4] = {0, 0, 0, 0};
-			int neighbors = countNeighbors(b, i, j, rules[4], newrgb);
-
-			b.getPixel(i,j).setHeldRGB(newrgb);
-			
-			//Calculates whether, based on active neighbors, an inactive pixel turns on
-			if (b.getPixel(i, j).isOn() == false){
-				if ((neighbors >= rules[2]) && (neighbors <= rules[3])) {
-					b.getPixel(i, j).flip(true);
-				} else {
-					b.getPixel(i, j).flip(false);
-				}
-			}
-			
-			//Calculates whether, based on inative neighbors, an active pixel turns off
-			if (b.getPixel(i, j).isOn() == true) {
-				if ((neighbors >= rules[0]) && (neighbors <= rules[1])) {
-					b.getPixel(i, j).flip(true);
-				} else {
-					b.getPixel(i, j).flip(false);
-				}
-			}
-		}
-	}
-
-	//Rectifies changes made during cellular automata filter
-	for (int i = 0; i < b.getSize(0); i++){
-		for (int j = 0; j < b.getSize(1); j++) {
-			b.getPixel(i, j).rectify();
-		}
-	}
+#endif
 }
 
 
@@ -480,3 +443,5 @@ ostream& operator<<(ostream& out, const Bitmap& b) {
 
 	return out;
 }
+
+#endif
