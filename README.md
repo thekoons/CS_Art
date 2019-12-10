@@ -1,22 +1,12 @@
 CellAutoAnimation
 =================
 
-This library implements an animation program designed to create gifs of cellular automata.
+This library implements an animation program designed to create gifs of cellular automata, based on permutations of the classic Conway's Game of Life.
 
-ToDo:
+In Conway's game, every cell has two states: alive or dead. This creates four transition functions: alive -> alive, alive -> dead, dead -> dead, and dead -> alive, each governed by how many live neighbors a cell might have. This implementation allows control over these four functions. Setting them to occur at different values alters the behavior of the automata in incredible ways!
 
-	Create MVP
-		DONE - Rewrite bitmap to create bitmaps of white and black squares
-		DONE - Create Cellular library to create successive bitmap frames using cellular automata rules
-		DONE - Integrate these to gif.h to create gifs
-	
-	Make Better
-		Implement scripted rule-changing
-		Implement windows with different rules
-		Implement color
-		Implement the addition of other images
-		Implement pixellation filters
+This implementation takes a bitmap image as input, and outputs a gif file. The gif file will be massive, because the gif library I found seems to be a little unoptimized. 
 
-	Make Best
-		Implement auto-generation from music
-		Implement MLA to identify shapes within which the Cellular Automatas can be generated
+Options for compilation (flags to set) are in the makefile.
+
+Have fun! 
