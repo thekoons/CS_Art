@@ -9,7 +9,7 @@ int main(int argc, char** argv)
 {
     if(argc != 3)
     {
-        cout << "usage:\n" << "cellular inputfile.bmp outputfile.gif" << endl;
+        cout << "usage:\n" << "gifMaker [inputfile.bmp] outputfile.gif" << endl;
 
         return 0;
     }
@@ -29,7 +29,7 @@ int main(int argc, char** argv)
 
         cout << "Seed Image Loading..." << endl;
 
-        in.open(infile, ios::binary);
+        in.open("Images/1.bmp", ios::binary);
         in >> image;
         in.close();
 
@@ -37,7 +37,7 @@ int main(int argc, char** argv)
 
         int width = image.getSize(1);
         int height = image.getSize(0);
-        int delay = 10;
+        int delay = 5;
         GifWriter gifw;
 
         cout << "Gif Writer Created..." << endl;
@@ -52,51 +52,100 @@ int main(int argc, char** argv)
 
         vector<Event*> events;
         vector<uint8_t> frame;
-        int max_frame = 1000;
-        int* args;
+        int max_frame = 0, stroke_num;
+        int radii[5] = {15, 11, 7, 3, 1};
 
-        //Automata Filter
-        events.push_back(new Filter(0, 1000, 2, NULL, NULL));
+        Bitmap* r = new Bitmap(image);
+        Bitmap* o = new Bitmap(image);
 
-        /*
-            args = new int[5];
-            args[0] = 2;
-            args[1] = 3;
-            args[2] = 3;
-            args[3] = 3;
-            args[4] = 1;
-        events.push_back(new Filter(0, 100, 1, args, NULL));
+        int clear[3] = {255, 255, 255};
+        o->clear(clear);
+        cout << "Reference and Output Images Intialized..." << endl << endl;
+        
+        for (int i = 1; i < 9; i++)
+        {
+            if (i == 1){
+                cout << "1  First stroke layer generating..." << endl;
+                events.push_back(new Painter(o, 0, 0, r, 1, &stroke_num, 2000, radii[0]));
+                cout << "1  ...First stroke layer generated " << stroke_num << " frames." << endl << endl;
+            }else{
+                if (i == 2)
+                    in.open("Images/2.bmp", ios::binary);
+                if (i == 3)
+                    in.open("Images/3.bmp", ios::binary);
+                if (i == 4)
+                    in.open("Images/4.bmp", ios::binary);
+                if (i == 5)
+                    in.open("Images/5.bmp", ios::binary);
+                if (i == 6)
+                    in.open("Images/6.bmp", ios::binary);
+                if (i == 7)
+                    in.open("Images/7.bmp", ios::binary);
+                if (i == 8)
+                    in.open("Images/8.bmp", ios::binary);
+                
+                in >> image;
+                in.close();
 
-            args = new int[5];
-            args[0] = 2;
-            args[1] = 3;
-            args[2] = 3;
-            args[3] = 4;
-            args[4] = 1;
-        events.push_back(new Filter(100, 100, 1, args, NULL));
+                /*
+                cout << i << " First stroke layer generating..." << endl;
+                delete r;
+                r = new Bitmap(image);
+                events.push_back(new Painter(o, max_frame, 0, r, 0, &stroke_num, 1000, radii[0]));
+                cout << i << "  ...First stroke layer generated " << stroke_num << " frames." << endl;
+                */
+            }
 
-            args = new int[5];
-            args[0] = 1;
-            args[1] = 5;
-            args[2] = 2;
-            args[3] = 2;
-            args[4] = 4;
-        events.push_back(new Filter(200, 100, 1, args, NULL));
 
-            args = new int[5];
-            args[0] = 0;
-            args[1] = 0;
-            args[2] = 1;
-            args[3] = 1;
-            args[4] = 1;
-        events.push_back(new Filter(300, 100, 1, args, NULL));
-        */
+            cout << i << "  Second stroke layer generating..." << endl;
+            delete r;
+            r = new Bitmap(image);
+            events.push_back(new Painter(o, max_frame, 0, r, 0, &stroke_num, 2000, radii[1]));
+            cout << i << "  ...Second stroke layer generated " << stroke_num << " frames." << endl << endl;
 
+            cout << i << "  Third stroke layer generating..." << endl;
+            delete r;
+            r = new Bitmap(image);
+            events.push_back(new Painter(o, max_frame, 0, r, 0, &stroke_num, 2000, radii[2]));
+            cout << i << "  ...Third stroke layer generated " << stroke_num << " frames." << endl << endl;
+            
+            cout << i << "  Fourth stroke layer generating..." << endl;
+            delete r;
+            r = new Bitmap(image);
+            events.push_back(new Painter(o, max_frame, 0, r, 0, &stroke_num, 2000, radii[3]));
+            cout << i << "  ...Fourth stroke layer generated " << stroke_num << " frames." << endl << endl;
+            events.push_back(new Painter(o, max_frame, 0, r, 0, &stroke_num, 2000, radii[3]));
+            cout << i << "  ...Fourth stroke layer generated again..." << endl << endl;
+            
+            cout << i << "  Fifth stroke layer generating..." << endl;
+            delete r;
+            r = new Bitmap(image);
+            events.push_back(new Painter(o, max_frame, 0, r, 0, &stroke_num, 2000, radii[4]));
+            cout << i << "  ...Fifth stroke layer generated " << stroke_num << " frames." << endl << endl;
+            events.push_back(new Painter(o, max_frame, 0, r, 0, &stroke_num, 2000, radii[4]));
+            cout << i << "  ...Fifth stroke layer generated again..." << endl << endl;
+            
+            max_frame += 100;
+            
+        }
+
+        getFrame(frame, *o);
+        GifWriteFrame(&gifw, frame.data(), width, height, delay);
+        char still[16] = "still0.bmp";
+        
         for (int n = 0; n < max_frame; n++)
         {
-            for (auto e : events) e -> Activate(image, n);
+            if (n % 100 == 0){
+                still[5] = (char) ((n / 100) + 48);
 
-            getFrame(frame, image);
+                out.open(still, ios::binary);
+                out << *o;
+                out.close();
+            }
+
+            for (auto e : events) e -> Activate(n);
+
+            getFrame(frame, *o);
 
 #ifdef SMOL
             GifWriteFrame(&gifw, frame.data(), width * 4, height * 4, delay);
@@ -113,6 +162,8 @@ int main(int argc, char** argv)
 
        for (auto e : events) delete e;
 
+       delete r;
+       delete o;
     }
     catch(BADHEADER)
     {
