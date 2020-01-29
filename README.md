@@ -1,12 +1,9 @@
-CellAutoAnimation
-=================
+## TheDennenning / CS_Art / Physics
 
-This library implements an animation program designed to create gifs of cellular automata, based on permutations of the classic Conway's Game of Life.
+In this branch lives code implementing the generation of abstract works of art given various physics simulations.
 
-In Conway's game, every cell has two states: alive or dead. This creates four transition functions: alive -> alive, alive -> dead, dead -> dead, and dead -> alive, each governed by how many live neighbors a cell might have. This implementation allows control over these four functions. Setting them to occur at different values alters the behavior of the automata in incredible ways!
+Currently, the physics simulation supported is a mess of variously sized circles, given various positions and velocities, whose intersections are then tracked and plotted. 
 
-This implementation takes a bitmap image as input, and outputs a gif file. The gif file will be massive, because the gif library I found seems to be a little unoptimized. 
+Compilation options are in Makefile, examples are given in the /Examples/ directory. 
 
-Options for compilation (flags to set) are in the makefile.
-
-Have fun! 
+Enjoy, and if you have any questions, please email me and ask! (Chris.Denning00 at gmail.com)
