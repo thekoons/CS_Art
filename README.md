@@ -1,6 +1,4 @@
-## TheDennenning / CS_Art
-
-# Painterly
+## TheDennenning / CS_Art / Painterly
 
 In this branch lives code implementing the generation of impressionistic works of art given an image.
 
