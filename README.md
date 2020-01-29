@@ -1,5 +1,4 @@
 ## TheDennenning / CS_Art
-=========================
 
 # Painterly
 
@@ -11,4 +10,4 @@ It can also animate the creation of stills, which, when done with multiple photo
 
 Compilation options are in Makefile, examples are given in the /Examples/ directory. 
 
-Enjoy, and if you have any questions, please email me at Chris.Denning00@gmail.com
+Enjoy, and if you have any questions, please email me and ask! (Chris.Denning00 at gmail.com)
