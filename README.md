@@ -1,12 +1,11 @@
-CellAutoAnimation
-=================
+## TheDennenning / CS_Art / Cellular
 
-This library implements an animation program designed to create gifs of cellular automata, based on permutations of the classic Conway's Game of Life.
+In this branch lives code implementing the generation of abstract works of art created with cellular automata.
 
-In Conway's game, every cell has two states: alive or dead. This creates four transition functions: alive -> alive, alive -> dead, dead -> dead, and dead -> alive, each governed by how many live neighbors a cell might have. This implementation allows control over these four functions. Setting them to occur at different values alters the behavior of the automata in incredible ways!
+It can create gifs of cellular automata, supporting arbitrary parameterization of both two- and three-state automata, with arbitrary changes to parameterization by frame. 
 
-This implementation takes a bitmap image as input, and outputs a gif file. The gif file will be massive, because the gif library I found seems to be a little unoptimized. 
+It can also output stills (as .bmp images) along the way.
 
-Options for compilation (flags to set) are in the makefile.
+Compilation options are in Makefile, examples are given in the /Examples/ directory. 
 
-Have fun! 
+Enjoy, and if you have any questions, please email me and ask! (Chris.Denning00 at gmail.com)
