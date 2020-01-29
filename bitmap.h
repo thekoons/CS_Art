@@ -25,36 +25,97 @@ class Pixel
 
 	public:
 		Pixel() 
-			{for (int i = 0; i < 4; i++) _rgb[i] = 0;}
+		{
+			_state = 0;
+
+			for (int i = 0; i < 4; i++) {
+				_rgb[i] = 0;
+				_nextrgb[i] = 0;
+				_heldrgb[i] = 0;
+			}
+		}
 
 		Pixel(int* rgb) 
-			{for (int i = 0; i < 4; i++) _rgb[i] = rgb[i];}
-		
-		Pixel(const Pixel &p) 
-			{for (int i = 0; i < 4; i++) _rgb[i] = p._rgb[i];}
+		{
+			for (int i = 0; i < 4; i++) {
+				_rgb[i] = rgb[i];
+				_heldrgb[i] = rgb[i];
+				_nextrgb[i] = 0;
+			}
+
+			//Activates pixels with r and b values equal to 255
+			if (_rgb[0] == 255 && _rgb[1] == 255)
+				_state = 0;
+			else
+				_state = 2;
+		}
 
 		Pixel(Pixel* p) 
 		{
+			_state = p->getState();
+			_nextstate = 0;
+
 			int* rgb = p->getRGB();
-			for (int i = 0; i < 4; i++) 
+			int* heldrgb = p->getHeldRGB();
+
+			for (int i = 0; i < 4; i++) {
+				_rgb[i] = rgb[i];
+				_heldrgb[i] = heldrgb[i];
+				_nextrgb[i] = 0;
+			}
+		}
+
+		int  getState() 			{return _state;}
+		void transition(int state) 	{_nextstate = state;}
+		
+		int* getRGB() 				{return _rgb;}
+		int* getHeldRGB() 			{return _heldrgb;}
+
+		void setRGB(int* rgb) 
+		{
+			for (int i = 0; i < 4; i++)
 				_rgb[i] = rgb[i];
 		}
 
-		int* getRGB() 
-			{return _rgb;}
-
-		void setRGB(int* rgb) 
-			{for (int i = 0; i < 4; i++) _rgb[i] = rgb[i];}
-
 		void setRGB(int rgb)
-			{for (int i = 0; i < 4; i++) _rgb[i] = rgb;}
+		{
+			for (int i = 0; i < 4; i++)
+				_rgb[i] = rgb;
+		}
 
 		void setNextRGB(int* nextrgb) 
-			{for (int i = 0; i < 4; i++) _nextrgb[i] = nextrgb[i];}
+		{
+			for (int i = 0; i < 4; i++)
+				_nextrgb[i] = nextrgb[i];
+		}
 
 		void setHeldRGB(int* heldrgb) 
-			{for (int i = 0; i < 4; i++) _heldrgb[i] = heldrgb[i];}
+		{
+			for (int i = 0; i < 4; i++)
+				_heldrgb[i] = heldrgb[i];
+		}
 
+		void rectify() 
+		{
+			_state = _nextstate;
+			_nextstate = 0;
+
+			for (int i = 0; i < 4; i++) {
+				if (_state == 2)
+					_rgb[i] = _heldrgb[i];
+				else if (_state == 1)
+					_rgb[i] = (int) (0.8 * ((float)_heldrgb[i]) + 0.2 * ((float)(255 - _heldrgb[i])));
+				else
+					_rgb[i] = 255 - _heldrgb[i];
+			}
+		}
+
+		void rectifyRGB()
+		{
+			for (int i = 0; i < 4; i++) {
+				_rgb[i] = _nextrgb[i];
+			}
+		}
 };
 
 class Bitmap
@@ -75,34 +136,14 @@ class Bitmap
 	public:
 
 		Bitmap() {}
-		Bitmap (const Bitmap &b) {
-			memcpy(header, b.header, 139);
-			headerLength = b.headerLength;
-			size[0] = b.size[0];
-			size[1] = b.size[1];
-			depth = b.depth;
-			maskRef[0] = b.maskRef[0];
-			maskRef[1] = b.maskRef[1];
-			maskRef[2] = b.maskRef[2];
-			maskRef[3] = b.maskRef[3];
-
-			for (int i = 0; i < size[0]; i++)
-			{
-				vector <Pixel> line;
-
-				for (int j = 0; j < size[1]; j++)
-				{
-					Pixel* p = new Pixel(b.map[i][j]);
-					line.push_back(*p);
-				}
-
-				map.push_back(line);
-			}
-		}
 
 		Bitmap(int type, int width, int height);
 
-		~Bitmap() {	}
+		~Bitmap() {
+			for (int i = 0; i < size[0]; i++) 
+				for (int j = 0; j < size[1]; j++) 
+					map[i].pop_back();
+		}
 		
 		//For use in overloading insertion operator
 		void setHeader(char* p_header, int p_length) 
@@ -123,36 +164,6 @@ class Bitmap
 
 		//For use in overloading extraction operator
 		Pixel getConstPixel(int i, int j) const {return map[i][j];}
-
-		//Sets bitmap to color;
-		void clear(int* rgb)
-		{
-			for (int i = 0; i < size[0]; i++)
-			{
-				for (int j = 0; j < size[1]; j++)
-				{
-					for (int k = 0; k < 3; k++)
-					{
-						map[i][j].getRGB()[k] = rgb[k];
-					}
-				}
-			}
-		}
-
-		//Sets bitmap to color;
-		void clear(int rgb)
-		{
-			for (int i = 0; i < size[0]; i++)
-			{
-				for (int j = 0; j < size[1]; j++)
-				{
-					for (int k = 0; k < 3; k++)
-					{
-						map[i][j].getRGB()[k] = rgb;
-					}
-				}
-			}
-		}
 };
 
 Bitmap::Bitmap(int type, int width, int height)
@@ -160,7 +171,32 @@ Bitmap::Bitmap(int type, int width, int height)
 	size[0] = width;
 	size[1] = height;
 
-	clear(255);
+	/*
+
+	for (int i = 0; i < size[0]; i++) {
+	
+		vector<Pixel> line;			
+		
+		for (int j = 0; j < size[1]; j++) {
+			
+			if (b.depth == 32) {	//Reads 32 bit pixel
+				for (int k = 0; k < 4; k++) { 
+					in.read((char*) &pixleData[k], 1);
+					rgb[maskRef[k]] = pixleData[k];
+				}	
+			} else {				//Reads 24 bit pixel
+				for (int k = 0; k < 3; k++) {
+					in.read((char*) &pixleData[k], 1);
+					rgb[k] = pixleData[k];
+				}
+			}
+
+			Pixel* p = new Pixel(rgb);
+			line.push_back(*p);
+		}
+
+		b.map.push_back(line);	
+		*/
 }
 
 //Takes Bitmap object B, and outputs frame as vector of uint8_t
@@ -322,8 +358,6 @@ istream& operator>>(istream& in, Bitmap& b)
 	uint32_t pixleData[4];
 	int rgb[4];
 
-	b.map.clear();
-
 	for (int i = 0; i < b.size[0]; i++) {
 	
 		vector<Pixel> line;			
@@ -339,9 +373,6 @@ istream& operator>>(istream& in, Bitmap& b)
 				for (int k = 0; k < 3; k++) {
 					in.read((char*) &pixleData[k], 1);
 					rgb[k] = pixleData[k];
-					if (k == 2) rgb[k] -= 65537;
-					if (rgb[k] > 255) rgb[k] = 255;
-					if (rgb[k] < 0)	  rgb[k] = 0;
 				}
 			}
 
@@ -389,18 +420,11 @@ ostream& operator<<(ostream& out, const Bitmap& b) {
 					delete[] binary;
 				}
 			} else {					//Writes 24 bit pixel
-	
-				binary = getBinary(rgb[2]);
-				out.write(binary, 1);
-				delete[] binary;//Writes 24 bit pixel
-	
-				binary = getBinary(rgb[1]);
-				out.write(binary, 1);
-				delete[] binary;//Writes 24 bit pixel
-	
-				binary = getBinary(rgb[0]);
-				out.write(binary, 1);
-				delete[] binary;
+				for (int k = 0; k < 3; k++) {
+					binary = getBinary(rgb[k]);
+					out.write(binary, 1);
+					delete[] binary;
+				}
 			}
 		}	
 		
