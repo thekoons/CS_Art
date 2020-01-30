@@ -1,6 +1,5 @@
 #include <iostream>
 #include <vector>
-#include <algorithm>
 #include <math.h>
 #include <string.h>
 #include "bitmap.h"
@@ -10,19 +9,11 @@ using namespace std;
 #ifndef _EVENT_HPP
 #define _EVENT_HPP
 
-
-// Computes n choose s, efficiently
-double Binomial(int n, int s)
+struct collision
 {
-    double        res;
-
-    res = 1;
-    for (int i = 1 ; i <= s ; i++)
-        res = (n - i + 1) * res / i ;
-
-    return res;
-}// Binomial
-
+	float* pos;
+	int* color;
+};
 
 class Event {
 	public:
@@ -36,110 +27,161 @@ class Event {
 		int _duration;
 };
 
-class State_Machine 
+class Circle
 {
 	public:
-		State_Machine();
+		Circle()
+		{
+			_pos = new float[2];
+			_vel = new float[2];
+			_rgb = new int[3];
 
-		State_Machine(vector<int> states, vector<int> alphabet, 
-		              vector<int> accept, vector<int> initial,
-					  vector<vector<int>> transition, int state) :
-					  _states(states), _alphabet(alphabet), _accept(accept),
-					  _initial(initial), _transitions(transition), _state(state) {}
+			_pos[0] = ((float) (rand() % 400000)) / 1000;
+			_pos[1] = ((float) (rand() % 400000)) / 1000;
 
-		~State_Machine();
+			_vel[0] = ((float) (rand() % 1000)) / 2500 - 0.20;
+			_vel[1] = ((float) (rand() % 1000)) / 2500 - 0.20;
 
-		//Changes internal state of machine
-		//	Outputs new state
-		int transition(int input)
-			{_state = _transitions[_state][input]; return _state;}
+			_rad = ((float) (rand() % 180) + 10);
+			
+			if (rand() % 1) 
+			{
+				_rgb[0] = 40;
+				_rgb[1] = 20;
+			}
+			else 
+			{
+				_rgb[0] = 20;
+				_rgb[1] = 40;
+			}
 
-		//Checks if state is accept, transitive, or final
-		int accept(int _state)
-			{return _accept[_state];}
 
-		//Checks if state is initial, transitive, or final
-		int initial(int _state)
-			{return _initial[_state];}
+			_rgb[2] = 0;
+			
 
-		//Gets current state of machine
-		int state()
-			{return _state;}
+			/*
+		
+			if (_pos[0] > 300)
+				_rgb[0] = 196;
+			else if (_pos[0] > 200)
+				_rgb[0] = 128;
+			else if (_pos[0] > 100)
+				_rgb[0] = 64;
+			else
+				_rgb[0] = 20;
+
+			if (_pos[1] > 300)
+				_rgb[2] = 196;
+			else if (_pos[1] > 200)
+				_rgb[2] = 128;
+			else if (_pos[1] > 100)
+				_rgb[2] = 64;
+			else
+				_rgb[2] = 20;
+
+			_rgb[1] = 0;
+			*/
+
+			//cout << "Circle at (" << _pos[0] << ", " << _pos[1] << "), moving at <" << _vel[0] << ", " << _vel[1] << ">" <<
+			//	    " with color " << _rgb[0] << ", " << _rgb[1] << ", " << _rgb[2] << endl;
+		}
+
+		Circle(float* pos, float* vel, float rad, int* rgb) : 
+			_pos(pos), _vel(vel), _rad(rad), _rgb(rgb) {}
+
+		~Circle()
+		{
+			delete[] _pos;
+			delete[] _vel;
+			delete[] _rgb;
+		}
+
+		int	   Update(int width, int height);
+		float* Intersect(Circle* c);
+		int*   get_color(Circle* c);
+
+		float* get_pos() {return _pos;}
+		float  get_rad() {return _rad;}
+		int*   get_rgb() {return _rgb;}
 
 	private:
 
-		//Current state
-		int _state;
+		//Position of center of circle (x, y)
+		float* _pos;
 
-		//Marks which states in state vector are initial
-		//	1 = is initial
-		//	0 = otherwise
-		vector<int> _initial;
+		//Velocity of circle
+		float* _vel;
 
-		//Marks which states in state vector are accept
-		//	1 = is accept
-		//	0 = otherwise
-		vector<int> _accept;
+		//Radius of circle
+		float _rad;
 
-		//Marks which integers are being used as transition symbols
-		vector<int> _alphabet;
-
-		//Marks which states are in the domain
-		vector<int> _states;
-
-		//Stores 'Next States' indexed by 'Transition' indexed by 'Current state'
-		vector<vector<int>> _transitions;
+		//Color of circle
+		int* _rgb;
 };
 
-class Cellular_Automata : public Event
+int Circle::Update(int width, int height)
+{
+	_pos[0] += _vel[0];
+	_pos[1] += _vel[1];
+
+	if ((_pos[0] >= width) || (_pos[0] < 0) || (_pos[1] >= height) || (_pos[1] < 0))
+		return 1; //Turn to 0 for images in "buggy"
+	else
+		return 0; //Turn to 1 for images in "buggy"
+}
+
+//Checks intersection with given circle
+float* Circle::Intersect(Circle* c)
+{
+	float distance = sqrt(pow(c->get_pos()[0] - _pos[0], 2) + pow(c->get_pos()[1] - _pos[1], 2));
+
+	if (c->get_rad() + _rad < distance)
+		return NULL;
+
+	float* point = new float[2];
+
+	point[0] = (c->get_rad() * c->get_pos()[0] + _rad * _pos[0]) / (c->get_rad() + _rad);
+	point[1] = (c->get_rad() * c->get_pos()[1] + _rad * _pos[1]) / (c->get_rad() + _rad);
+
+	//cout << "	Intersection Found" << endl;
+	//cout << "		distance = " << distance << endl;
+	//cout << "		combined radii = " << c->get_rad() + _rad << endl;
+	//cout << "		midway point = (" << point[0] << ", " << point[1] << ")" << endl;
+
+	return point;
+}
+
+//Averages color
+int* Circle::get_color(Circle* c)
+{
+	int* ret_rgb = new int[3];
+	int* rgb = c->get_rgb();
+
+	for (int i = 0; i < 3; i++) 
+		ret_rgb[i] = (int) ((float)rgb[i] + _rgb[i]) / 2;
+
+	return ret_rgb;
+}
+
+class Automata : public Event 
 {
 	public:
 
-		Cellular_Automata();
-		Cellular_Automata(Bitmap *b, int start, int duration, int row, int col, int* params) :
-			Event(b, start, duration), _row(row), _col(col)
-			{
-				
-			}
-		~Cellular_Automata();
+		Automata();
+		~Automata();
 
 	private:
 
-		//Holds grid of state machines
-		//	one per pixel of final image
-		vector<vector<State_Machine*>> _grid;
-		int _row;
-		int _col;
+		int _type;
+		int* _args_i;
+		float* _args_f;
 
 		//Helper function for Automata
 		int* countNeighbors(int i, int j, int AE, int* newRGB, int state_num);
 
-		void Activate(int frame_num);
-
 		void automata_2S();		// _type = 1
 		void automata_3S();		// _type = 2
 };
-
-void Automata::Activate(int frame_num)
-{
-	//Activate if frame number is after start but before end of duration
-	if (frame_num < _start || frame_num >= _start + _duration)
-		return;
-
-	//Stores transition symbols for all automata
-	int** transitions = new int*[_row];
-
-	for (int i = 0; i < _row; i++)
-		transitions[i] = new int[_col];
-	
-	for (int i = 0; i < _row; i++)
-	{
-		for (int j = 0; j < _col; j++)
-		{
-			transitions[i] = countNeighbors
-		}
-	}
-}
 
 
 //Counts neighbors of pixel at position i, j with area of effect AE
@@ -313,332 +355,39 @@ void Automata::automata_3S()
 }
 
 
-class Stroke { // Data structure for holding painterly strokes.
-public:
-   Stroke(void);
-   Stroke(unsigned int radius, unsigned int x, unsigned int y,
-          unsigned char r, unsigned char g, unsigned char b, unsigned char a);
-   
-   // data
-   unsigned int radius, x, y;	// Location for the stroke
-   unsigned char r, g, b, a;	// Color
-};
-
-///////////////////////////////////////////////////////////////////////////////
-//
-//      Build a Stroke
-//
-///////////////////////////////////////////////////////////////////////////////
-Stroke::Stroke() {}
-
-///////////////////////////////////////////////////////////////////////////////
-//
-//      Build a Stroke
-//
-///////////////////////////////////////////////////////////////////////////////
-Stroke::Stroke(unsigned int iradius, unsigned int ix, unsigned int iy,
-               unsigned char ir, unsigned char ig, unsigned char ib, unsigned char ia) :
-   radius(iradius),x(ix),y(iy),r(ir),g(ig),b(ib),a(ia)
-{}
-
-class Painter : public Event 
-{
+class Animation : public Event {
 	public:
-		Painter();
-		Painter(Bitmap *b, int start, int duration, Bitmap *r, int firstLayer, int *strokeNum, int strokeMax, int radius) 
-			: Event(b, start, duration), _r(r), _firstLayer(firstLayer), _strokeMax(strokeMax), _radius(radius), _width(b->getSize(0)), _height(b->getSize(1)) 
-		{
-			cout << "	Generating Reference..." << endl;
-			Generate_Reference();
-			cout << "	Generating Layer..." << endl;
-			Generate_Layer();
-			*strokeNum = _strokeNum / 20;
-			_duration = _strokeNum / 20;
-		}
+		Animation();
+		~Animation();
 
-		~Painter();
-		
-		void Activate(int frame_num);
+		//Called once per frame, calls Write_Pixel appropriately
+		virtual void Activate(int frame_num);   
 
 	private:
-		int _firstLayer;
-		int _strokeNum;
-		int _strokeMax;
-		int _radius;
-		int _width;
-		int _height;
 
-		Bitmap* _r;
-		vector<Stroke*> _s;
+		int* _rgb_start;     //Initial color values of animation
+		int** _rgb_script;   //Frame by frame delta color values
+								//To be added to rgb values each frame
 
-		//Generates reference image
-		//	using variously sized gaussian blur
-		void Generate_Reference();
+		int* _pix_start;     //Initial coordinates of central pixel
+		int** _pix_script;   //Frame by frame delta coordinate values
+								//To be added to coordinate each frame
 
-		//Generates layer of strokes
-		void Generate_Layer();
+		int _shape;          //One of a predetermined number of shapes
+		int* _shape_params;  //Parameters unique to shape 
 
-		//Paints a single stroke from layer
-		void Paint_Stroke(const Stroke& s);
+		//Writes a color value to a pixel
+		void Write_Pixel(int* coords, int* rgb);
+
+		//Applies filter inside of shape
+		void Apply_Filter(int* coords, int shape);
 };
 
 
-void Painter::Activate(int frame_num)
+void Animation::Write_Pixel(int* coords, int* rgb)
 {
-	if (frame_num < _start || frame_num >= _start + _duration)
-		return;
-
-	for (int i = 0; i < 20; i++)
-		Paint_Stroke(*_s[(frame_num - _start) * 20 + i]);
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-//
-//		Helper Function for NPR_Paint
-//			Applies gaussian blur of size 2 * R + 1
-//
-///////////////////////////////////////////////////////////////////////////////
-void Painter::Generate_Reference()
-{
-	int N = 2 * _radius + 1;
-	double *Gaussian = new double[N];
-	double sum[3];
-	double total;
-
-	int*** temp = new int**[_width];
-	for (int i = 0; i < _width; i++)
-	{
-		temp[i] = new int*[_height];
-		for (int j = 0; j < _height; j++)
-		{
-			temp[i][j] = new int[3];
-		}
-	}
-
-	//Calculates 1D Gaussian
-	for (int k = 0; k < N; k++)
-		Gaussian[k] = Binomial(N, k);
-
-	cout << "		Initializing Gaussian Blur..." << endl;
-
-	//Loop through image
-	for (int i = 0; i < _width; i++)
-	{
-		for (int j = 0; j < _height; j++)
-		{
-			//Zero out summing variable
-			for (int k = 0; k < 3; k++)
-				sum[k] = 0;
-
-			total = 0;
-
-			int lb = -(N / 2);
-			int ub = (N / 2) + (N % 2);
-
-			//Computes value of filter over pixel (i, j) given sized filter N
-			for (int g_i = lb; g_i < ub; g_i++)
-			{
-				for (int g_j = lb; g_j < ub; g_j++)
-				{
-					//Skips values if out of bounds
-					if (i + g_i >= 0 && i + g_i < _width)
-					{
-						if (j + g_j >= 0 && j + g_j < _height)
-						{
-							//Gets pixel value at specified pixel
-							int* rgb = _r->getPixel(i + g_i, j + g_j).getRGB();
-
-							//Multiplies two 1-D gaussian filter terms together
-							//	Simulating 2-D gaussian filter
-							for (int k = 0; k < 3; k++)
-								sum[k] += Gaussian[g_i + (N / 2)] * Gaussian[g_j + (N / 2)] * rgb[k];
-
-							total += Gaussian[g_i + (N / 2)] * Gaussian[g_j + (N / 2)];
-						}
-					}
-				}
-			}
-
-			//Assigns value to temporary holding
-			//	So as to not mess with other filter calculations
-			for (int k = 0; k < 3; k++)
-				temp[i][j][k] = (int) (sum[k] / total); //weighted average
-		}
-	}
-
-	cout << "		Setting Image Values..." << endl;
-
-	//Empties and Deletes temporary holding
 	
-	for (int i = 0; i < _width; i++)
-	{
-		for (int j = 0; j < _height; j++)
-		{
-			for (int k = 0; k < 3; k++)
-				_r->getPixel(i, j).getRGB()[k] = temp[i][j][k];
-
-			delete[] temp[i][j];
-		}
-		delete[] temp[i];
-	}
-
-	delete[] temp;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-//
-//		Helper Function for NPR_Paint
-//			Applies paint strokes to canvas
-//		
-///////////////////////////////////////////////////////////////////////////////
-void Painter::Generate_Layer()
-{
-	//Create new set of strokes
-	_strokeNum = 0;
-
-	//Sets grid to f_g * R, with f_g = 1
-	int grid = _radius;
-
-	//Sets threshold to 25
-	int T = 25;
-
-	//Create difference image
-	//	Only holds one value per pixel, so is only width * height
-	double *D = new double[_width * _height];
-
-	//Initializes Difference Image
-	for (int i = 0; i < _width; i++)
-	{
-		for (int j = 0; j < _height; j++)
-		{
-			if (!_firstLayer)
-			{
-				//Calculates difference image given initailized canvas
-				double sum = 0;
-
-				int* rgb_r = _r->getPixel(i, j).getRGB();
-				int* rgb_o = _b->getPixel(i, j).getRGB();
-
-				for (int k = 0; k < 3; k++)
-					sum += (rgb_r[k] - rgb_o[k]) * (rgb_r[k] - rgb_o[k]);
-
-				D[i * _height + j] = sqrt(sum);
-			}
-			else
-			{
-				//Initializes difference image, in order to initialize canvas
-				D[i * _height + j] = 100;
-			}
-		}
-	}
-
-	//Generates Strokes
-	for (int i = 0; i < _width; i++)
-	{
-		for (int j = 0; j < _height; j++)
-		{
-			//To store cumulative error
-			double areaError = 0;
-
-			//To store maximum error
-			double max = 0;
-
-			//To store maximum error coordinates
-			int max_i = 0, max_j = 0;
-			int N = grid / 2;
-
-			//Sum error near (i, j)
-			for (int i_g = i - N; i_g < i + N + 1; i_g++)
-			{
-				for (int j_g = j - N; j_g < j + N + 1; j_g++)
-				{
-					if (i_g >= 0 && i_g < _width)
-					{
-						if (j_g >= 0 && j_g < _height)
-						{
-							//Add error to sum
-							areaError += D[i_g * _height + j_g];
-
-							//Check if error is max
-							if (D[i_g * _height + j_g] > max)
-							{
-								max = D[i_g * _height + j_g];
-								max_i = i_g;
-								max_j = j_g;
-							}
-						}
-					}
-				}
-			}
-
-			//Calculate error of area
-			areaError /= (grid * grid);
-
-			//Threshold
-			if (areaError > T) {
-
-				//Get Pixel rgb value
-				int* rgb = _r->getPixel(max_i, max_j).getRGB();
-
-				//cout << rgb[0] << ", " << rgb[1] << ", " << rgb[2] << endl;
-
-				//Make Stroke unsigned int iradius, unsigned int ix, unsigned int iy, unsigned char ir, unsigned char ig, unsigned char ib, unsigned char ia
-				_s.push_back(new Stroke(_radius, max_j, max_i, rgb[2], rgb[1], rgb[0], 255));
-
-				_strokeNum++;
-			}
-		}
-	}
-
-	//Shuffle, for natural look
-	random_shuffle(_s.begin(), _s.end());
-
-	//Limit number of strokes layer can have
-	if (_strokeNum > _strokeMax) _strokeNum = _strokeMax;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-//
-//      Helper function for the painterly filter; paint a stroke at
-// the given location
-//
-///////////////////////////////////////////////////////////////////////////////
-void Painter::Paint_Stroke(const Stroke& s) {
-   int radius_squared = (int)s.radius * (int)s.radius;
-   for (int x_off = -((int)s.radius); x_off <= (int)s.radius; x_off++) {
-      for (int y_off = -((int)s.radius); y_off <= (int)s.radius; y_off++) {
-         int x_loc = (int)s.x + x_off;
-         int y_loc = (int)s.y + y_off;
-         // are we inside the circle, and inside the image?
-         if ((x_loc >= 0 && x_loc < _height && y_loc >= 0 && y_loc < _width)) {
-            int dist_squared = x_off * x_off + y_off * y_off;
-            if (dist_squared <= radius_squared) {
-				/*
-               _b->getPixel(y_loc, x_loc).getRGB()[0] = 
-                  (_b->getPixel(y_loc, x_loc).getRGB()[0] + s.r) / 2;
-               _b->getPixel(y_loc, x_loc).getRGB()[1] = 
-                  (_b->getPixel(y_loc, x_loc).getRGB()[1] + s.g) / 2;
-               _b->getPixel(y_loc, x_loc).getRGB()[2] = 
-                  (_b->getPixel(y_loc, x_loc).getRGB()[2] + s.b) / 2;
-				*/
-               _b->getPixel(y_loc, x_loc).getRGB()[0] = s.r;
-               _b->getPixel(y_loc, x_loc).getRGB()[1] = s.g;
-               _b->getPixel(y_loc, x_loc).getRGB()[2] = s.b;
-			   
-            } else if (dist_squared >= radius_squared + 1 && dist_squared <= radius_squared + 2) {
-               _b->getPixel(y_loc, x_loc).getRGB()[0] = 
-                  (_b->getPixel(y_loc, x_loc).getRGB()[0] + s.r) / 2;
-               _b->getPixel(y_loc, x_loc).getRGB()[1] = 
-                  (_b->getPixel(y_loc, x_loc).getRGB()[1] + s.g) / 2;
-               _b->getPixel(y_loc, x_loc).getRGB()[2] = 
-                  (_b->getPixel(y_loc, x_loc).getRGB()[2] + s.b) / 2;
-            }
-         }
-      }
-   }
-}
-
 
 class Filter : public Event {
 
@@ -659,11 +408,6 @@ class Filter : public Event {
 		int _type;
 		int* _args_i;
 		float* _args_f;
-
-		void Dither_FS();
-		void Dither_Color();
-		void Filter_Gaussian_N(unsigned int N);
-		void Filter_Edge();
 
 		void pixelate();		// _type = 3
 		void blur();			// _type = 4
@@ -829,9 +573,8 @@ void Filter::blur()
 //  operation.
 //
 ///////////////////////////////////////////////////////////////////////////////
-void Filter::Dither_FS()
+bool Filter::Dither_FS()
 {
-	/*
 	float *out_data = new float[width * height];
 	float *acc_data = new float[width * height];
 
@@ -934,7 +677,6 @@ void Filter::Dither_FS()
 	}
 
     return true;
-	*/
 }// Dither_FS
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -944,9 +686,8 @@ void Filter::Dither_FS()
 //  Return success of operation.
 //
 ///////////////////////////////////////////////////////////////////////////////
-void Filter::Dither_Color()
+bool Filter::Dither_Color()
 {
-	/*
 	unsigned char *out_data = new unsigned char[width * height * 4];
 	unsigned char *acc_data = new unsigned char[width * height * 4];
 	memset(out_data, '\0', width * height * 4);
@@ -1080,7 +821,6 @@ void Filter::Dither_Color()
 	}
 
 	return true;
-	*/
 }// Dither_Color
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1090,9 +830,8 @@ void Filter::Dither_Color()
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-void Filter::Filter_Gaussian_N( unsigned int N )
+bool Filter::Filter_Gaussian_N( unsigned int N )
 {
-	/*
 	unsigned char *temp_data = new unsigned char[width * height * 4];
 	memset(temp_data, '\0', width * height * 4);
 
@@ -1154,7 +893,6 @@ void Filter::Filter_Gaussian_N( unsigned int N )
 		data[i] = temp_data[i];
 
 	return true;
-	*/
 }// Filter_Gaussian_N
 
 
@@ -1164,9 +902,8 @@ void Filter::Filter_Gaussian_N( unsigned int N )
 //  success of operation.
 //
 ///////////////////////////////////////////////////////////////////////////////
-void Filter::Filter_Edge()
+bool Filter::Filter_Edge()
 {
-	/*
 	unsigned char *temp_data = new unsigned char[width * height * 4];
 	memset(temp_data, '\0', width * height * 4);
 
@@ -1225,9 +962,271 @@ void Filter::Filter_Edge()
 	}
 
 	return true;
-	*/
 }// Filter_Edge
 
+///////////////////////////////////////////////////////////////////////////////
+//
+//      Run simplified version of Hertzmann's painterly image filter.
+//      You probably will want to use the Draw_Stroke funciton and the
+//      Stroke class to help.
+// Return success of operation.
+//
+///////////////////////////////////////////////////////////////////////////////
+bool Filter::NPR_Paint()
+{	
+	unsigned char *save = new unsigned char[width * height * 4];
+	unsigned char *reference = new unsigned char[width * height * 4];
+
+	memcpy(save, data, width * height * 4);
+
+	//Brush Strokes
+	int radii[] = {7, 3, 1};
+
+	//Flag variable (to be used in Difference Image Calculation)
+	int hasPassed = 0;
+
+	for (int i = 0; i < 3; i++)
+	{
+		//Clear reference image
+		memset(reference, '\0', width * height * 4);
+
+		//apply gaussian blur
+		Blur(reference, save, radii[i]);
+		
+		//paint a layer
+		Paint_Layer(reference, radii[i], hasPassed++);
+	}
+
+    return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//		Helper Function for NPR_Paint
+//			Applies gaussian blur of size 2 * R + 1
+//
+///////////////////////////////////////////////////////////////////////////////
+void Filter::Blur(unsigned char *reference, unsigned char* save, int R)
+{
+	int N = 2 * R + 1;
+	double *Gaussian = new double[N];
+	double sum[3];
+	double total;
+
+	//Calculates 1D Gaussian
+	for (int k = 0; k < N; k++)
+		Gaussian[k] = Binomial(N, k);
+
+	//Loop through image
+	for (int i = 0; i < height; i++)
+	{
+		for (int j = 0; j < width * 4; j = j + 4)
+		{
+			//Zero out summing variable
+			for (int k = 0; k < 3; k++)
+				sum[k] = 0;
+			total = 0;
+
+			int lb = -(N / 2);
+			int ub = (N / 2) + (N % 2);
+
+			//Computes value of filter over pixel (i, j) given sized filter N
+			for (int g_i = lb; g_i < ub; g_i++)
+			{
+				for (int g_j = lb; g_j < ub; g_j++)
+				{
+					//Skips values if out of bounds
+					if (i + g_i >= 0 && i + g_i < height)
+					{
+						if (((j / 4) + g_j >= 0) && ((j / 4) + g_j < width))
+						{
+							//Multiplies two 1-D gaussian filter terms together
+							//	Simulating 2-D gaussian filter
+							for (int k = 0; k < 3; k++)
+								sum[k] += Gaussian[g_i + (N / 2)] * Gaussian[g_j + (N / 2)] * save[(i + g_i) * (width * 4) + (j + g_j * 4) + k];
+
+							total += Gaussian[g_i + (N / 2)] * Gaussian[g_j + (N / 2)];
+						}
+					}
+				}
+			}
+
+			//Assigns value to temporary holding
+			//	So as to not mess with other filter calculations
+			for (int k = 0; k < 3; k++)
+				reference[i * (width * 4) + j + k] = (unsigned char) (sum[k] / total); //weighted average
+
+			//Saves alpha value
+			reference[i * (width * 4) + j + 3] = save[i * (width * 4) + j + 3];
+		}
+	}
+
+	//Reference image is now initialized
+	//	Is passed back to caller function as such
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//		Helper Function for NPR_Paint
+//			Applies paint strokes to canvas
+//		
+///////////////////////////////////////////////////////////////////////////////
+void Filter::Paint_Layer(unsigned char *reference, int R, int hasPassed)
+{
+	//Create new set of strokes
+	vector<Stroke*> S;
+	int strokeNum = 0;
+
+	//Sets grid to f_g * R, with f_g = 1
+	int grid = R;
+
+	//Sets threshold to 25
+	int T = 25;
+
+	//Create difference image
+	//	Only holds one value per pixel, so is only width * height
+	double *D = new double[width * height];
+
+	//Initializes Difference Image
+	for (int i = 0; i < height; i++)
+	{
+		for (int j = 0; j < width * 4; j = j + 4)
+		{
+			if (hasPassed)
+			{
+				//Calculates difference image given initailized canvas
+				double sum = 0;
+
+				for (int k = 0; k < 3; k++)
+					sum += (reference[i * (width * 4) + j + k] - data[i * (width * 4) + j + k]) * (reference[i * (width * 4) + j + k] - data[i * (width * 4) + j + k]);
+
+				D[i * width + (j / 4)] = sqrt(sum);
+			}
+			else
+			{
+				//Initializes difference image, in order to initialize canvas
+				D[i * width + (j / 4)] = INT_MAX;
+			}
+		}
+	}
+
+	//Generates Strokes
+	for (int i = 0; i < height; i++)
+	{
+		for (int j = 0; j < width; j++)
+		{
+			//To store cumulative error
+			double areaError = 0;
+
+			//To store maximum error
+			double max = 0;
+
+			//To store maximum error coordinates
+			int max_i = 0, max_j = 0;
+			int N = grid / 2;
+
+			//Sum error near (i, j)
+			for (int i_g = i - N; i_g < i + N + 1; i_g++)
+			{
+				for (int j_g = j - N; j_g < j + N + 1; j_g++)
+				{
+					if (i_g >= 0 && i_g < height)
+					{
+						if (j_g >= 0 && j_g < width)
+						{
+							//Add error to sum
+							areaError += D[i_g * width + j_g];
+
+							//Check if error is max
+							if (D[i_g * width + j_g] > max)
+							{
+								max = D[i_g * width + j_g];
+								max_i = i_g;
+								max_j = j_g;
+							}
+						}
+					}
+				}
+			}
+
+			//Calculate error of area
+			areaError /= (grid * grid);
+
+			//Threshold
+			if (areaError > T) {
+				//Make Stroke unsigned int iradius, unsigned int ix, unsigned int iy, unsigned char ir, unsigned char ig, unsigned char ib, unsigned char ia
+				S.push_back(new Stroke(R, max_j, max_i, 
+									   reference[max_i * (width * 4) + max_j * 4 + RED], 
+									   reference[max_i * (width * 4) + max_j * 4 + GREEN],
+									   reference[max_i * (width * 4) + max_j * 4 + BLUE], 
+									   reference[max_i * (width * 4) + max_j * 4 + 3]));
+
+				strokeNum++;
+			}
+		}
+	}
+
+	random_shuffle(S.begin(), S.end());
+
+	//Paint all strokes
+	for (int i = 0; i < strokeNum; i++)
+	{
+		Paint_Stroke(*S[i]);
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//      Helper function for the painterly filter; paint a stroke at
+// the given location
+//
+///////////////////////////////////////////////////////////////////////////////
+void Filter::Paint_Stroke(const Stroke& s) {
+   int radius_squared = (int)s.radius * (int)s.radius;
+   for (int x_off = -((int)s.radius); x_off <= (int)s.radius; x_off++) {
+      for (int y_off = -((int)s.radius); y_off <= (int)s.radius; y_off++) {
+         int x_loc = (int)s.x + x_off;
+         int y_loc = (int)s.y + y_off;
+         // are we inside the circle, and inside the image?
+         if ((x_loc >= 0 && x_loc < width && y_loc >= 0 && y_loc < height)) {
+            int dist_squared = x_off * x_off + y_off * y_off;
+            if (dist_squared <= radius_squared) {
+               data[(y_loc * width + x_loc) * 4 + 0] = s.r;
+               data[(y_loc * width + x_loc) * 4 + 1] = s.g;
+               data[(y_loc * width + x_loc) * 4 + 2] = s.b;
+               data[(y_loc * width + x_loc) * 4 + 3] = s.a;
+            } else if (dist_squared == radius_squared + 1) {
+               data[(y_loc * width + x_loc) * 4 + 0] = 
+                  (data[(y_loc * width + x_loc) * 4 + 0] + s.r) / 2;
+               data[(y_loc * width + x_loc) * 4 + 1] = 
+                  (data[(y_loc * width + x_loc) * 4 + 1] + s.g) / 2;
+               data[(y_loc * width + x_loc) * 4 + 2] = 
+                  (data[(y_loc * width + x_loc) * 4 + 2] + s.b) / 2;
+               data[(y_loc * width + x_loc) * 4 + 3] = 
+                  (data[(y_loc * width + x_loc) * 4 + 3] + s.a) / 2;
+            }
+         }
+      }
+   }
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//      Build a Stroke
+//
+///////////////////////////////////////////////////////////////////////////////
+Stroke::Stroke() {}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//      Build a Stroke
+//
+///////////////////////////////////////////////////////////////////////////////
+Stroke::Stroke(unsigned int iradius, unsigned int ix, unsigned int iy,
+               unsigned char ir, unsigned char ig, unsigned char ib, unsigned char ia) :
+   radius(iradius),x(ix),y(iy),r(ir),g(ig),b(ib),a(ia)
+{}
 
 void Filter::zoom()
 {}
