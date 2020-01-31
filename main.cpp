@@ -9,7 +9,7 @@ int main(int argc, char** argv)
 {
     if(argc != 3)
     {
-        cout << "usage:\n" << "gifMaker [inputfile.bmp] outputfile.gif" << endl;
+        cout << "usage:\n" << "fractal inputfile.bmp outputfile.gif" << endl;
 
         return 0;
     }
@@ -29,7 +29,7 @@ int main(int argc, char** argv)
 
         cout << "Seed Image Loading..." << endl;
 
-        in.open("Images/1.bmp", ios::binary);
+        in.open(infile, ios::binary);
         in >> image;
         in.close();
 
@@ -52,108 +52,36 @@ int main(int argc, char** argv)
 
         vector<Event*> events;
         vector<uint8_t> frame;
-        int max_frame = 0, stroke_num;
-        int radii[5] = {15, 11, 7, 3, 1};
 
-        Bitmap* r = new Bitmap(image);
-        Bitmap* o = new Bitmap(image);
+        int max_frame = 50;
 
-        int clear[3] = {255, 255, 255};
-        o->clear(clear);
+        int clear[3] = {0, 0, 0};
+        image.clear(clear);
         cout << "Reference and Output Images Intialized..." << endl << endl;
-        
-        for (int i = 1; i < 9; i++)
-        {
-            if (i == 1){
-                cout << "1  First stroke layer generating..." << endl;
-                events.push_back(new Painter(o, 0, 0, r, 1, &stroke_num, 2000, radii[0]));
-                cout << "1  ...First stroke layer generated " << stroke_num << " frames." << endl << endl;
-            }else{
-                if (i == 2)
-                    in.open("Images/2.bmp", ios::binary);
-                if (i == 3)
-                    in.open("Images/3.bmp", ios::binary);
-                if (i == 4)
-                    in.open("Images/4.bmp", ios::binary);
-                if (i == 5)
-                    in.open("Images/5.bmp", ios::binary);
-                if (i == 6)
-                    in.open("Images/6.bmp", ios::binary);
-                if (i == 7)
-                    in.open("Images/7.bmp", ios::binary);
-                if (i == 8)
-                    in.open("Images/8.bmp", ios::binary);
-                
-                in >> image;
-                in.close();
 
-                /*
-                cout << i << " First stroke layer generating..." << endl;
-                delete r;
-                r = new Bitmap(image);
-                events.push_back(new Painter(o, max_frame, 0, r, 0, &stroke_num, 1000, radii[0]));
-                cout << i << "  ...First stroke layer generated " << stroke_num << " frames." << endl;
-                */
-            }
-
-
-            cout << i << "  Second stroke layer generating..." << endl;
-            delete r;
-            r = new Bitmap(image);
-            events.push_back(new Painter(o, max_frame, 0, r, 0, &stroke_num, 2000, radii[1]));
-            cout << i << "  ...Second stroke layer generated " << stroke_num << " frames." << endl << endl;
-
-            cout << i << "  Third stroke layer generating..." << endl;
-            delete r;
-            r = new Bitmap(image);
-            events.push_back(new Painter(o, max_frame, 0, r, 0, &stroke_num, 2000, radii[2]));
-            cout << i << "  ...Third stroke layer generated " << stroke_num << " frames." << endl << endl;
-            
-            cout << i << "  Fourth stroke layer generating..." << endl;
-            delete r;
-            r = new Bitmap(image);
-            events.push_back(new Painter(o, max_frame, 0, r, 0, &stroke_num, 2000, radii[3]));
-            cout << i << "  ...Fourth stroke layer generated " << stroke_num << " frames." << endl << endl;
-            events.push_back(new Painter(o, max_frame, 0, r, 0, &stroke_num, 2000, radii[3]));
-            cout << i << "  ...Fourth stroke layer generated again..." << endl << endl;
-            
-            cout << i << "  Fifth stroke layer generating..." << endl;
-            delete r;
-            r = new Bitmap(image);
-            events.push_back(new Painter(o, max_frame, 0, r, 0, &stroke_num, 2000, radii[4]));
-            cout << i << "  ...Fifth stroke layer generated " << stroke_num << " frames." << endl << endl;
-            events.push_back(new Painter(o, max_frame, 0, r, 0, &stroke_num, 2000, radii[4]));
-            cout << i << "  ...Fifth stroke layer generated again..." << endl << endl;
-            
-            max_frame += 100;
-            
-        }
-
-        getFrame(frame, *o);
-        GifWriteFrame(&gifw, frame.data(), width, height, delay);
-        char still[16] = "still0.bmp";
+        events.push_back(new Fractal(&image, 0, 50, width, height, 0));
         
         for (int n = 0; n < max_frame; n++)
         {
-            if (n % 100 == 0){
-                still[5] = (char) ((n / 100) + 48);
-
-                out.open(still, ios::binary);
-                out << *o;
-                out.close();
-            }
-
             for (auto e : events) e -> Activate(n);
 
-            getFrame(frame, *o);
+            getFrame(frame, image);
 
-#ifdef SMOL
-            GifWriteFrame(&gifw, frame.data(), width * 4, height * 4, delay);
-#else
             GifWriteFrame(&gifw, frame.data(), width, height, delay);
-#endif
-
+                
             cout << "   Frame " << n << " Written" << endl;
+
+            if (n % 10 == 0)
+            {
+                string fileName = "out" + to_string(n) + ".bmp";
+
+                out.open(fileName, ios::binary);
+                out << image;
+                out.close();
+
+                cout << "   Image " << n << " Written" << endl;
+            }
+
         }
 
        GifEnd(&gifw);
@@ -161,13 +89,10 @@ int main(int argc, char** argv)
        cout << "...Gif Written" << endl; 
 
        for (auto e : events) delete e;
-
-       delete r;
-       delete o;
     }
     catch(BADHEADER)
     {
-	cout << "Error: file not recognized." << endl;
+	    cout << "Error: file not recognized." << endl;
     }
     catch(...)
     {

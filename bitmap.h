@@ -16,12 +16,8 @@ class BADHEADER : public exception {
 class Pixel
 {
 	private:
-		int _state;				//State of pixel (for Cellular Automata)
-		int _nextstate;			//State of pixel for after rectify is called
 
 		int _rgb[4];			//current rgb value as number between 0-255
-		int _nextrgb[4];		//next rgb value (to be set upon next step)
-		int _heldrgb[4];		//held rgb value (for Cellular Automata)
 
 	public:
 		Pixel() 
@@ -48,12 +44,6 @@ class Pixel
 
 		void setRGB(int rgb)
 			{for (int i = 0; i < 4; i++) _rgb[i] = rgb;}
-
-		void setNextRGB(int* nextrgb) 
-			{for (int i = 0; i < 4; i++) _nextrgb[i] = nextrgb[i];}
-
-		void setHeldRGB(int* heldrgb) 
-			{for (int i = 0; i < 4; i++) _heldrgb[i] = heldrgb[i];}
 
 };
 

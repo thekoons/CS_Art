@@ -1,5 +1,5 @@
 regu:
-	g++ main.cpp -o cellular
+	g++ main.cpp -o fractal
 
 smol:
-	g++ -DSMOL main.cpp -o cellular
+	g++ -DSMOL main.cpp -o fractal
