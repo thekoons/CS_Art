@@ -1,5 +1,5 @@
-smol:
-	g++ -DSMOL main.cpp -o physics
+sparse:
+	g++ -DSPARSE main.cpp -o physics
 
-regu:
+lines:
 	g++ main.cpp -o physics
