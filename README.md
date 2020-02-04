@@ -1,10 +1,10 @@
-## TheDennenning / CS_Art / Cellular
+## TheDennenning / CS_Art / Rewrite
 
-In this branch lives code implementing the generation of abstract works of art created with cellular automata.
+In this branch lives code implementing the generation of abstract works of art created with rewrite systems.
 
-It can create gifs of cellular automata, supporting arbitrary parameterization of both two- and three-state automata, with arbitrary changes to parameterization by frame. 
+It can create gifs of rewrite systems generating towers of transformations
 
-It can also output stills (as .bmp images) along the way.
+It can create stills of finished towers
 
 Compilation options are in Makefile, examples are given in the /Examples/ directory. 
 

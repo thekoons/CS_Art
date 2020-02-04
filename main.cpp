@@ -58,40 +58,6 @@ int main(int argc, char** argv)
         //Automata Filter
         events.push_back(new Filter(0, 500, 2, NULL, NULL));
 
-        /*
-            args = new int[5];
-            args[0] = 2;
-            args[1] = 3;
-            args[2] = 3;
-            args[3] = 3;
-            args[4] = 1;
-        events.push_back(new Filter(0, 100, 1, args, NULL));
-
-            args = new int[5];
-            args[0] = 2;
-            args[1] = 3;
-            args[2] = 3;
-            args[3] = 4;
-            args[4] = 1;
-        events.push_back(new Filter(100, 100, 1, args, NULL));
-
-            args = new int[5];
-            args[0] = 1;
-            args[1] = 5;
-            args[2] = 2;
-            args[3] = 2;
-            args[4] = 4;
-        events.push_back(new Filter(200, 100, 1, args, NULL));
-
-            args = new int[5];
-            args[0] = 0;
-            args[1] = 0;
-            args[2] = 1;
-            args[3] = 1;
-            args[4] = 1;
-        events.push_back(new Filter(300, 100, 1, args, NULL));
-        */
-
         for (int n = 0; n < max_frame; n++)
         {
             for (auto e : events) e -> Activate(image, n);

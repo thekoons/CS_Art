@@ -1,5 +1,2 @@
-smol:
-	g++ -DSMOL main.cpp -o cellular
-
-regu:
+default:
 	g++ main.cpp -o cellular
