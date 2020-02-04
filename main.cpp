@@ -5,6 +5,10 @@
 #include "bitmap.h"
 #include "gif.h"
 
+#define RED 2
+#define BLUE 3
+#define GREEN 4
+
 int main(int argc, char** argv)
 {
     if(argc != 3)
@@ -42,21 +46,68 @@ int main(int argc, char** argv)
 
         cout << "Gif Writer Created..." << endl;
 
-#ifdef SMOL
-        GifBegin(&gifw, outfile.c_str(), width * 4, height * 4, delay);
-#else
         GifBegin(&gifw, outfile.c_str(), width, height, delay);
-#endif 
 
         cout << "Gif Writer Initialized..." << endl;
 
         vector<Event*> events;
         vector<uint8_t> frame;
         int max_frame = 500;
-        int* args;
+
+        vector< vector< vector <int> > > rules;
+        
+        vector<int> rule1_in = {RED};
+        vector<int> rule1_out = {RED, GREEN};
+
+        vector< vector <int> > rule1;
+        rule1.push_back(rule1_in);
+        rule1.push_back(rule1_out);
+        rules.push_back(rule1);
+
+        vector<int> rule2_in = {BLUE, RED};
+        vector<int> rule2_out = {GREEN, GREEN};
+
+        vector< vector <int> > rule2;
+        rule2.push_back(rule2_in);
+        rule2.push_back(rule2_out);
+        rules.push_back(rule2);
+
+        vector<int> rule3_in = {BLUE, GREEN};
+        vector<int> rule3_out = {RED, BLUE};
+
+        vector< vector <int> > rule3;
+        rule3.push_back(rule3_in);
+        rule3.push_back(rule3_out);
+        rules.push_back(rule3);
+
+        vector<int> rule4_in = {GREEN, RED};
+        vector<int> rule4_out = {GREEN, BLUE};
+
+        vector< vector <int> > rule4;
+        rule4.push_back(rule4_in);
+        rule4.push_back(rule4_out);
+        rules.push_back(rule4);
+
+        vector<int> rule5_in = {GREEN, BLUE};
+        vector<int> rule5_out = {RED, GREEN};
+
+        vector< vector <int> > rule5;
+        rule5.push_back(rule5_in);
+        rule5.push_back(rule5_out);
+        rules.push_back(rule5);
+
+        vector<int> rule6_in = {GREEN, GREEN};
+        vector<int> rule6_out = {BLUE, BLUE};
+
+        vector< vector <int> > rule6;
+        rule6.push_back(rule6_in);
+        rule6.push_back(rule6_out);
+        rules.push_back(rule6);
+
+        vector<int> first = {RED};
 
         //Automata Filter
-        events.push_back(new Filter(0, 500, 2, NULL, NULL));
+        events.push_back(new Filter(0, 500, width, height, 0, rules, first));
 
         for (int n = 0; n < max_frame; n++)
         {
@@ -64,11 +115,7 @@ int main(int argc, char** argv)
 
             getFrame(frame, image);
 
-#ifdef SMOL
-            GifWriteFrame(&gifw, frame.data(), width * 4, height * 4, delay);
-#else
             GifWriteFrame(&gifw, frame.data(), width, height, delay);
-#endif
 
             cout << "   Frame " << n << " Written" << endl;
         }
@@ -78,6 +125,12 @@ int main(int argc, char** argv)
        cout << "...Gif Written" << endl; 
 
        for (auto e : events) delete e;
+
+       out.open("out.bmp", ios::binary);
+       out << image;
+       out.close();
+
+       cout << "...Image Written." << endl;
 
     }
     catch(BADHEADER)
