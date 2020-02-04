@@ -1,2 +1,2 @@
 default:
-	g++ main.cpp -o cellular
+	g++ main.cpp -o rewrite

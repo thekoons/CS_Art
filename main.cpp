@@ -39,8 +39,8 @@ int main(int argc, char** argv)
 
         cout << "Seed Image Loaded..." << endl;
 
-        int width = image.getSize(1);
-        int height = image.getSize(0);
+        int width = image.getSize(0);
+        int height = image.getSize(1);
         int delay = 10;
         GifWriter gifw;
 
@@ -52,12 +52,12 @@ int main(int argc, char** argv)
 
         vector<Event*> events;
         vector<uint8_t> frame;
-        int max_frame = 500;
+        int max_frame = 100;
 
         vector< vector< vector <int> > > rules;
         
         vector<int> rule1_in = {RED};
-        vector<int> rule1_out = {RED, GREEN};
+        vector<int> rule1_out = {RED, RED, GREEN};
 
         vector< vector <int> > rule1;
         rule1.push_back(rule1_in);
@@ -107,7 +107,7 @@ int main(int argc, char** argv)
         vector<int> first = {RED};
 
         //Automata Filter
-        events.push_back(new Filter(0, 500, width, height, 0, rules, first));
+        events.push_back(new Filter(0, max_frame, width, height, 0, rules, first));
 
         for (int n = 0; n < max_frame; n++)
         {
@@ -126,7 +126,7 @@ int main(int argc, char** argv)
 
        for (auto e : events) delete e;
 
-       out.open("out.bmp", ios::binary);
+       out.open("Examples/out.bmp", ios::binary);
        out << image;
        out.close();
 

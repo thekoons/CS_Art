@@ -70,11 +70,13 @@ void Filter::Activate(Bitmap &b, int frame_num)
 	{
 		switch(_type)
 		{
-			case 1:
+			case 0:
 				Rewrite();
 				break;
 		}
 	}
+
+	_step++;
 }
 
 //Counts neighbors of pixel at position i, j with area of effect AE
@@ -83,8 +85,17 @@ void Filter::Activate(Bitmap &b, int frame_num)
 //		state_num determines how many states to consider
 void Filter::Rewrite()
 {
-	cout << "Initiating Step " << _step << "..." << endl;
+	/*
+	cout << "	Initiating Rewrite " << _step << "..." << endl;
 	
+	cout << "	Current Row..." << endl << "		";
+
+	int c = -1;
+	while (_grid[_step][++c] != 0)
+		cout << _grid[_step][c];
+	cout << endl;
+	*/
+
 	//Tracks column of current row
 	int j_cur = 0;
 
@@ -95,7 +106,7 @@ void Filter::Rewrite()
 	int rule_num = _rules.size();
 
 	//If the current cell is live
-	while(Grid[_step][j_cur] != 0)
+	while(_grid[_step][j_cur] != 0)
 	{
 		//Tracks if any rule is implemented at all over a cell
 		int no_rule = 1;
@@ -103,7 +114,6 @@ void Filter::Rewrite()
 		//Iterate over all rules to see if one applies
 		for (int r = 0; r < rule_num; r++)
 		{
-			cout << "	Testing rule " << r << endl;
 			//Check if rule r is present 
 			int eq = 1;
 
@@ -123,7 +133,9 @@ void Filter::Rewrite()
 				//if so, add rule r output to next string
 				if (eq == 1)
 				{
-					cout << "		Rule " << r << " matches..." << endl;
+					/*
+					cout << "	Rule " << r << " matches..." << endl;
+					*/
 
 					for (int l = 0; l < rule_out.size(); l++)
 					{
@@ -133,7 +145,7 @@ void Filter::Rewrite()
 							_grid[_step + 1][j_out] = rule_out[l];
 
 							//Set color of bitmap image
-							_b->getPixel(_step + l, j_out).setRGB(getColor(rule_out[l]));
+							_b->getPixel(j_out, _step + 1).setRGB(getColor(rule_out[l]));
 
 							//iterate output column counter
 							j_out++;
@@ -151,11 +163,18 @@ void Filter::Rewrite()
 		} 
 	}
 	
-	cout << "Step returning..." << endl;
+	/*
+	cout << "	Output Row..." << endl << "		";
+
+	c = -1;
+	while (_grid[_step + 1][++c] != 0)
+		cout << _grid[_step + 1][c];
+	cout << endl;
+	*/
 }
 
 //Takes integer value and returns rgb value
-int* getColor(int n)
+int* Filter::getColor(int n)
 {
 	int* color = new int[3];
 
