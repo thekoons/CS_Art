@@ -1,0 +1,52 @@
+
+        vector< vector< vector <int> > > rules;
+        
+        vector<int> rule1_in = {RED};
+        vector<int> rule1_out = {RED, GREEN};
+
+        vector< vector <int> > rule1;
+        rule1.push_back(rule1_in);
+        rule1.push_back(rule1_out);
+        rules.push_back(rule1);
+
+        vector<int> rule2_in = {BLUE, RED};
+        vector<int> rule2_out = {GREEN, GREEN};
+
+        vector< vector <int> > rule2;
+        rule2.push_back(rule2_in);
+        rule2.push_back(rule2_out);
+        rules.push_back(rule2);
+
+        vector<int> rule3_in = {BLUE, GREEN};
+        vector<int> rule3_out = {RED, BLUE};
+
+        vector< vector <int> > rule3;
+        rule3.push_back(rule3_in);
+        rule3.push_back(rule3_out);
+        rules.push_back(rule3);
+
+        vector<int> rule4_in = {GREEN, RED};
+        vector<int> rule4_out = {GREEN, BLUE};
+
+        vector< vector <int> > rule4;
+        rule4.push_back(rule4_in);
+        rule4.push_back(rule4_out);
+        rules.push_back(rule4);
+
+        vector<int> rule5_in = {GREEN, BLUE};
+        vector<int> rule5_out = {RED, GREEN};
+
+        vector< vector <int> > rule5;
+        rule5.push_back(rule5_in);
+        rule5.push_back(rule5_out);
+        rules.push_back(rule5);
+
+        vector<int> rule6_in = {GREEN, GREEN};
+        vector<int> rule6_out = {BLUE, BLUE};
+
+        vector< vector <int> > rule6;
+        rule6.push_back(rule6_in);
+        rule6.push_back(rule6_out);
+        rules.push_back(rule6);
+
+        vector<int> first = {RED};

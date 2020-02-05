@@ -16,60 +16,30 @@ class BADHEADER : public exception {
 class Pixel
 {
 	private:
-		int _state;				//State of pixel (for Cellular Automata)
-		int _nextstate;			//State of pixel for after rectify is called
-
 		int _rgb[4];			//current rgb value as number between 0-255
-		int _nextrgb[4];		//next rgb value (to be set upon next step)
-		int _heldrgb[4];		//held rgb value (for Cellular Automata)
 
 	public:
 		Pixel() 
 		{
-			_state = 0;
-
-			for (int i = 0; i < 4; i++) {
+			for (int i = 0; i < 4; i++) 
 				_rgb[i] = 0;
-				_nextrgb[i] = 0;
-				_heldrgb[i] = 0;
-			}
 		}
 
 		Pixel(int* rgb) 
 		{
-			for (int i = 0; i < 4; i++) {
+			for (int i = 0; i < 4; i++) 
 				_rgb[i] = rgb[i];
-				_heldrgb[i] = rgb[i];
-				_nextrgb[i] = 0;
-			}
-
-			//Activates pixels with r and b values equal to 255
-			if (_rgb[0] == 255 && _rgb[1] == 255)
-				_state = 0;
-			else
-				_state = 2;
 		}
 
 		Pixel(Pixel* p) 
 		{
-			_state = p->getState();
-			_nextstate = 0;
-
 			int* rgb = p->getRGB();
-			int* heldrgb = p->getHeldRGB();
 
-			for (int i = 0; i < 4; i++) {
+			for (int i = 0; i < 4; i++)
 				_rgb[i] = rgb[i];
-				_heldrgb[i] = heldrgb[i];
-				_nextrgb[i] = 0;
-			}
 		}
 
-		int  getState() 			{return _state;}
-		void transition(int state) 	{_nextstate = state;}
-		
-		int* getRGB() 				{return _rgb;}
-		int* getHeldRGB() 			{return _heldrgb;}
+		int* getRGB() {return _rgb;}
 
 		void setRGB(int* rgb) 
 		{
@@ -82,40 +52,6 @@ class Pixel
 			for (int i = 0; i < 4; i++)
 				_rgb[i] = rgb;
 		}
-
-		void setNextRGB(int* nextrgb) 
-		{
-			for (int i = 0; i < 4; i++)
-				_nextrgb[i] = nextrgb[i];
-		}
-
-		void setHeldRGB(int* heldrgb) 
-		{
-			for (int i = 0; i < 4; i++)
-				_heldrgb[i] = heldrgb[i];
-		}
-
-		void rectify() 
-		{
-			_state = _nextstate;
-			_nextstate = 0;
-
-			for (int i = 0; i < 4; i++) {
-				if (_state == 2)
-					_rgb[i] = _heldrgb[i];
-				else if (_state == 1)
-					_rgb[i] = (int) (0.8 * ((float)_heldrgb[i]) + 0.2 * ((float)(255 - _heldrgb[i])));
-				else
-					_rgb[i] = 255 - _heldrgb[i];
-			}
-		}
-
-		void rectifyRGB()
-		{
-			for (int i = 0; i < 4; i++) {
-				_rgb[i] = _nextrgb[i];
-			}
-		}
 };
 
 class Bitmap
@@ -127,7 +63,7 @@ class Bitmap
 		char header[139];
 		int headerLength;
 		
-		int size[2];
+		int size[2];	//0 - height, 1 - width
 		int depth;
 		int maskRef[4];
 		
@@ -166,39 +102,6 @@ class Bitmap
 		Pixel getConstPixel(int i, int j) const {return map[i][j];}
 };
 
-Bitmap::Bitmap(int type, int width, int height)
-{
-	size[0] = width;
-	size[1] = height;
-
-	/*
-
-	for (int i = 0; i < size[0]; i++) {
-	
-		vector<Pixel> line;			
-		
-		for (int j = 0; j < size[1]; j++) {
-			
-			if (b.depth == 32) {	//Reads 32 bit pixel
-				for (int k = 0; k < 4; k++) { 
-					in.read((char*) &pixleData[k], 1);
-					rgb[maskRef[k]] = pixleData[k];
-				}	
-			} else {				//Reads 24 bit pixel
-				for (int k = 0; k < 3; k++) {
-					in.read((char*) &pixleData[k], 1);
-					rgb[k] = pixleData[k];
-				}
-			}
-
-			Pixel* p = new Pixel(rgb);
-			line.push_back(*p);
-		}
-
-		b.map.push_back(line);	
-		*/
-}
-
 //Takes Bitmap object B, and outputs frame as vector of uint8_t
 //	Stores each pixel's RGBA values consecutively
 void getFrame(vector<uint8_t>& frame, Bitmap& b)
@@ -219,7 +122,7 @@ void getFrame(vector<uint8_t>& frame, Bitmap& b)
 					for (int k = 0; k < 4; k++)
 						frame.push_back((uint8_t) rgb[k]);
 				}
-			}		
+			}
 		}
 	}
 #else
@@ -231,11 +134,11 @@ void getFrame(vector<uint8_t>& frame, Bitmap& b)
 
 			for (int k = 0; k < 4; k++)
 				frame.push_back((uint8_t) rgb[k]);
+				
 		}		
-	}
-#endif
+	}	
+#endif	
 }
-
 
 //Translates mask to an integer value corresponding to the "turned on" byte
 //	MASK MUST BE OF TYPE ONE-HOT

@@ -105,8 +105,8 @@ void Filter::Rewrite()
 	//Gets number of rules to consider
 	int rule_num = _rules.size();
 
-	//If the current cell is live
-	while(_grid[_step][j_cur] != 0)
+	//If the current cell is live and in bounds
+	while(_grid[_step][j_cur] != 0 && j_cur < _width && j_out < _width)
 	{
 		//Tracks if any rule is implemented at all over a cell
 		int no_rule = 1;
@@ -144,9 +144,14 @@ void Filter::Rewrite()
 							//Set grid cell to resulting value
 							_grid[_step + 1][j_out] = rule_out[l];
 
+#ifdef SYMM
 							//Set color of bitmap image
+							_b->getPixel(_step + 1, j_out).setRGB(getColor(rule_out[l]));
 							_b->getPixel(j_out, _step + 1).setRGB(getColor(rule_out[l]));
-
+#else
+							//Set color of bitmap image
+							_b->getPixel(_step + 1, j_out).setRGB(getColor(rule_out[l]));
+#endif
 							//iterate output column counter
 							j_out++;
 						}
@@ -157,10 +162,25 @@ void Filter::Rewrite()
 					no_rule = 0;
 				} 
 			} 
-
-			if (r == rule_num - 1 && no_rule == 1)
-				j_cur++;
 		} 
+
+		if (no_rule == 1 && j_cur < _width && j_out < _width)
+		{
+			//Set grid cell to resulting value
+			_grid[_step + 1][j_out] = _grid[_step][j_cur];
+
+#ifdef SYMM
+			//Set color of bitmap image
+			_b->getPixel(_step + 1, j_out).setRGB(getColor(_grid[_step][j_cur]));
+			_b->getPixel(j_out, _step + 1).setRGB(getColor(_grid[_step][j_cur]));
+#else
+			//Set color of bitmap image
+			_b->getPixel(_step + 1, j_out).setRGB(getColor(_grid[_step][j_cur]));
+#endif
+
+			j_cur++;
+			j_out++;
+		}
 	}
 	
 	/*
@@ -199,6 +219,11 @@ int* Filter::getColor(int n)
 			color[0] = 0;
 			color[1] = 255;
 			color[2] = 0;
+			break;
+		case 5:  //Purple
+			color[0] = 128;
+			color[1] = 0;
+			color[2] = 128;
 			break;
 		default: //Black
 			color[0] = 0;
