@@ -16,28 +16,29 @@ class BADHEADER : public exception {
 class Pixel
 {
 	private:
-		int _state;				//State of pixel (for Cellular Automata)
-		int _nextstate;			//State of pixel for after rectify is called
 
-		int _rgb[4];			//current rgb value as number between 0-255
-		int _nextrgb[4];		//next rgb value (to be set upon next step)
-		int _heldrgb[4];		//held rgb value (for Cellular Automata)
+		int _rgb[4];	//current rgb value as number between 0-255
+		int _brght;		//mean of rgb values as number between 0-255	
 
 	public:
 		Pixel() 
-			{for (int i = 0; i < 4; i++) _rgb[i] = 0;}
+			{for (int i = 0; i < 4; i++) _rgb[i] = 0;
+			_brght = 0;}
 
 		Pixel(int* rgb) 
-			{for (int i = 0; i < 4; i++) _rgb[i] = rgb[i];}
+			{for (int i = 0; i < 4; i++) _rgb[i] = rgb[i];
+			_brght = (int) ((float) rgb[0] + rgb[1] + rgb[2]) / 3;}
 		
 		Pixel(const Pixel &p) 
-			{for (int i = 0; i < 4; i++) _rgb[i] = p._rgb[i];}
+			{for (int i = 0; i < 4; i++) _rgb[i] = p._rgb[i];
+			_brght = (int) ((float) p._rgb[0] + p._rgb[1] + p._rgb[2]) / 3;}
 
 		Pixel(Pixel* p) 
 		{
 			int* rgb = p->getRGB();
 			for (int i = 0; i < 4; i++) 
 				_rgb[i] = rgb[i];
+			_brght = (int) ((float) rgb[0] + rgb[1] + rgb[2]) / 3;
 		}
 
 		int* getRGB() 
@@ -49,11 +50,8 @@ class Pixel
 		void setRGB(int rgb)
 			{for (int i = 0; i < 4; i++) _rgb[i] = rgb;}
 
-		void setNextRGB(int* nextrgb) 
-			{for (int i = 0; i < 4; i++) _nextrgb[i] = nextrgb[i];}
-
-		void setHeldRGB(int* heldrgb) 
-			{for (int i = 0; i < 4; i++) _heldrgb[i] = heldrgb[i];}
+		int getBRT()
+			{return _brght;}
 
 };
 
