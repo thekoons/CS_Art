@@ -29,7 +29,7 @@ int main(int argc, char** argv)
 
         cout << "Seed Image Loading..." << endl;
 
-        in.open("Images/1.bmp", ios::binary);
+        in.open(infile, ios::binary);
         in >> image;
         in.close();
 
@@ -38,7 +38,7 @@ int main(int argc, char** argv)
         int width = image.getSize(1);
         int height = image.getSize(0);
         int delay = 5;
-        int max_frame = 1000;
+        int max_frame = width;
         GifWriter gifw;
 
         cout << "Gif Writer Created..." << endl;
@@ -50,23 +50,28 @@ int main(int argc, char** argv)
         vector<Event*> events;
         vector<uint8_t> frame;
 
-        for (int n = 0; n < max_frame; n++)
+        events.push_back(new Sorter(&image, 0, max_frame));
+
+        for (int n = 0; n < max_frame; n++) {
 
             events[0]->Activate(n);
         
+            getFrame(frame, image);
+
             GifWriteFrame(&gifw, frame.data(), width, height, delay);
 
             cout << "   Frame " << n << " Written" << endl;
         }
 
-       GifEnd(&gifw);
+        GifEnd(&gifw);
 
-       cout << "...Gif Written" << endl; 
+        cout << "...Gif Written" << endl; 
 
-       for (auto e : events) delete e;
+        out.open("out.bmp", ios::binary);
+        out << image;
+        out.close();
 
-       delete r;
-       delete o;
+        for (auto e : events) delete e;
     }
     catch(BADHEADER)
     {

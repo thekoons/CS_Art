@@ -44,6 +44,9 @@ class Pixel
 		int* getRGB() 
 			{return _rgb;}
 
+		int getRGB(int n) 
+			{return _rgb[n];}
+
 		void setRGB(int* rgb) 
 			{for (int i = 0; i < 4; i++) _rgb[i] = rgb[i];}
 
@@ -167,24 +170,10 @@ void getFrame(vector<uint8_t>& frame, Bitmap& b)
 {
 	frame.clear();
 
-#ifdef SMOL
-	for (int i = 0; i < b.getSize(0); i++) 
-	{
-		for (int l1 = 0; l1 < 4; l1++)
-		{
-			for (int j = 0; j < b.getSize(1); j++)
-			{
-				for (int l2 = 0; l2 < 4; l2++)
-				{
-					int* rgb = b.getPixel(i, j).getRGB();
+#ifdef DEBUG
+	cout << "Writing frame..." << endl;
+#endif
 
-					for (int k = 0; k < 4; k++)
-						frame.push_back((uint8_t) rgb[k]);
-				}
-			}		
-		}
-	}
-#else
 	for (int i = 0; i < b.getSize(0); i++) 
 	{
 		for (int j = 0; j < b.getSize(1); j++)
@@ -195,7 +184,6 @@ void getFrame(vector<uint8_t>& frame, Bitmap& b)
 				frame.push_back((uint8_t) rgb[k]);
 		}		
 	}
-#endif
 }
 
 

@@ -1,1 +1,5 @@
-g++ main.cpp -o pixel-sorter
+debug:
+	g++ -DDEBUG main.cpp -o sorter
+
+default:
+	g++ main.cpp -o sorter
