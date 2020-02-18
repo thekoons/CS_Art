@@ -9,7 +9,7 @@ int main(int argc, char** argv)
 {
     if(argc != 3)
     {
-        cout << "usage:\n" << "gifMaker [inputfile.bmp] outputfile.gif" << endl;
+        cout << "usage:\n" << "sorter inputfile.bmp outputfile.bmp" << endl;
 
         return 0;
     }
@@ -39,16 +39,19 @@ int main(int argc, char** argv)
         int height = image.getSize(0);
         int delay = 5;
         int max_frame = width;
+
+#ifdef GIF
         GifWriter gifw;
 
         cout << "Gif Writer Created..." << endl;
 
         GifBegin(&gifw, outfile.c_str(), width, height, delay);
+        vector<uint8_t> frame;
 
         cout << "Gif Writer Initialized..." << endl;
+#endif
 
         vector<Event*> events;
-        vector<uint8_t> frame;
 
         events.push_back(new Sorter(&image, 0, max_frame));
 
@@ -56,18 +59,21 @@ int main(int argc, char** argv)
 
             events[0]->Activate(n);
         
+#ifdef GIF
             getFrame(frame, image);
 
             GifWriteFrame(&gifw, frame.data(), width, height, delay);
-
+#endif
             cout << "   Frame " << n << " Written" << endl;
         }
 
+#ifdef GIF
         GifEnd(&gifw);
 
         cout << "...Gif Written" << endl; 
+#endif
 
-        out.open("out.bmp", ios::binary);
+        out.open(outfile, ios::binary);
         out << image;
         out.close();
 

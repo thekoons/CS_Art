@@ -376,7 +376,7 @@ ostream& operator<<(ostream& out, const Bitmap& b) {
 				}
 			} else {					//Writes 24 bit pixel
 	
-				binary = getBinary(rgb[2]);
+				binary = getBinary(rgb[0]);
 				out.write(binary, 1);
 				delete[] binary;//Writes 24 bit pixel
 	
@@ -384,7 +384,7 @@ ostream& operator<<(ostream& out, const Bitmap& b) {
 				out.write(binary, 1);
 				delete[] binary;//Writes 24 bit pixel
 	
-				binary = getBinary(rgb[0]);
+				binary = getBinary(rgb[2]);
 				out.write(binary, 1);
 				delete[] binary;
 			}
