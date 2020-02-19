@@ -180,8 +180,10 @@ void getFrame(vector<uint8_t>& frame, Bitmap& b)
 		{
 			int* rgb = b.getPixel(i, j).getRGB();
 
-			for (int k = 0; k < 4; k++)
-				frame.push_back((uint8_t) rgb[k]);
+			frame.push_back((uint8_t) rgb[2]);
+			frame.push_back((uint8_t) rgb[1]);
+			frame.push_back((uint8_t) rgb[0]);
+			frame.push_back((uint8_t) rgb[3]);
 		}		
 	}
 }
