@@ -29,7 +29,7 @@ int main(int argc, char** argv)
 
         cout << "Seed Image Loading..." << endl;
 
-        in.open("Images/1.bmp", ios::binary);
+        in.open("Images/4.bmp", ios::binary);
         in >> image;
         in.close();
 
@@ -62,7 +62,7 @@ int main(int argc, char** argv)
         o->clear(clear);
         cout << "Reference and Output Images Intialized..." << endl << endl;
         
-        for (int i = 1; i < 9; i++)
+        for (int i = 1; i < 5; i++)
         {
             if (i == 1){
                 cout << "1  First stroke layer generating..." << endl;
@@ -70,19 +70,11 @@ int main(int argc, char** argv)
                 cout << "1  ...First stroke layer generated " << stroke_num << " frames." << endl << endl;
             }else{
                 if (i == 2)
-                    in.open("Images/2.bmp", ios::binary);
-                if (i == 3)
-                    in.open("Images/3.bmp", ios::binary);
-                if (i == 4)
-                    in.open("Images/4.bmp", ios::binary);
-                if (i == 5)
                     in.open("Images/5.bmp", ios::binary);
-                if (i == 6)
+                if (i == 3)
                     in.open("Images/6.bmp", ios::binary);
-                if (i == 7)
+                if (i == 4)
                     in.open("Images/7.bmp", ios::binary);
-                if (i == 8)
-                    in.open("Images/8.bmp", ios::binary);
                 
                 in >> image;
                 in.close();
