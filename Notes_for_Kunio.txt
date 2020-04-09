@@ -1,0 +1,174 @@
+Tasks for Chris:
+
+    Fix Bitmap.h
+
+    Generalize main function
+
+
+Tasks for Kunio:
+
+    Write a menu 
+
+        boilerplate menu with stubs for the actual functions
+            press 0 for this thing, 1 for the other thing, so on
+
+        Two main options:
+            Do you want to make a gif?
+            Do you want to make an image?
+
+        Menu stretch goal:
+            write a menu such that a user can specify events to run over a gif
+
+    Compile all derived event classes into one file
+
+        go to all the branches and take the derived classes out of events.h
+            and put them into a single event file
+
+        All derived event classes should be named by the algorithm they run
+            e.g. class Painterly : public event
+
+
+Working on the Project:
+
+    dev branch
+        this is the branch we'll actively develop work on
+
+    master branch
+        this is the branch that should always be working
+            
+
+
+Gif.h is the gifwriting library
+
+    we don't have to touch it!
+
+
+Bitmap.h is utility code for reading/writing from bitmaps
+
+    Class pixel stores information on single pixels
+
+        _rgb[4]:
+            0 - Red value       0 means no red, 255 means full red
+            1 - Green value     ''
+            2 - Blue value      ''
+            3 - Alpha value     0 means invisible, 255 means fully visible
+
+    
+    Class bitmap
+
+        read and write bitmaps by overloading the >> and << operators
+
+        A bitmap image...
+
+            two parts
+
+                header - has a bunch of random info
+
+                data - array of pixel values ---> Gets stored in vector<vector<Pixel>> map;
+
+                    aside: vectors are just arrays that C++ manages for you
+
+                        constructor:    vector<int> stuff
+                        put stuff in:   stuff.push_back(int value)
+                        access:         stuff[0]
+
+        Some bugs:
+
+            colors get inverted
+            width/height is not consistent
+
+        
+    
+
+Event.h is where the algorithms live
+
+    Class Event
+
+        takes a bitmap image, a starting frame, and a duration
+
+        When activation is called...
+
+            it is passed the frame number that the gif is on
+
+                if this frame number is after 'start' and before 'start' + 'duration'
+                    then the algorithm will run
+
+                
+                it checks the 
+
+    Class 'Algorithm' : public Event
+
+        This is where all the algorithms are made
+
+
+
+Main.cpp
+
+    Pseudocode of general operation
+
+        //Bitmap seed image is loaded
+
+            Bitmap image;
+
+            in.open(file);
+            in >> image;
+            in.close();
+
+        //Initialize Gif Writer
+
+            Gifwriter gifw;
+            GifBegin(&gifw, out, width, height, delay)
+
+        //Make the Events
+
+            vector<Event*> events;  //stores all events
+            vector<uint8_t> frame;  //temporary frame data storage
+                                    //  to pass image from bitmap to gifwriter
+
+            events.push_back(new Derived_Event_1(image ... )); //events[0] = new derived_event
+            events.push_back(new Derived_Event_1(image ... )); //events[1] = new derived_event
+            events.push_back(new Derived_Event_2(image ... )); //events[2] = new derived_event
+            events.push_back(new Derived_Event_3(image ... )); //events[3] = new derived_event
+
+
+        //Generate the Gif
+
+            for (n = 0; n < max_frame; n++)
+            {
+                //for each loop, loops through given data structure
+                for (auto e : events) e -> Activate(n);
+
+                        //does the same thing as this for loop
+                        for (int j = 0; j < events.size(); j++)
+                            events[j] -> Activate(n);
+
+                getFrame(frame, image);
+                //  takes a 2D array of pixels and maps it to a 1D array of ints
+
+                GifWriteFrame(gifw, frame.data(), width, height, delay);
+                //  writes frame to gif
+            }
+
+
+Makefile
+
+    make is a build system for linux programs
+    
+        you write a makefile 
+            specifies what console commands to run to compile your program
+
+        you call the makefile
+            make smol -> triggers whatever commands are under the 'smol:' option
+
+    I use make to set compiler flags
+
+        -DSMOL ---> #define SMOL
+
+        make smol ---> run whatever code is embedded in #ifdef SMOL ... #endif
+
+    Make smol:
+
+        generally, I'll work with images that are 1000 x 1000 pixels
+
+        make smol makes it so that the program takes a 250 x 250 image
+            but then when it writes it out to a gif, it quadruples it back to 1000 x 1000

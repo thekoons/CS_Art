@@ -42,7 +42,7 @@ int main(int argc, char** argv)
 
         cout << "Gif Writer Created..." << endl;
 
-#ifdef SMOL
+#ifdef SMOL     //Note that this is for if smol was called rather than the other item in the make file.
         GifBegin(&gifw, outfile.c_str(), width * 4, height * 4, delay);
 #else
         GifBegin(&gifw, outfile.c_str(), width, height, delay);
