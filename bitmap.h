@@ -8,6 +8,7 @@ using namespace std;
 #ifndef _BITMAP_HPP
 #define _BITMAP_HPP
 
+// 
 class BADHEADER : public exception {
 	public:
 		string msg;
